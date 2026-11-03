@@ -4,20 +4,19 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'REAL_NOW_ANDROID_SOURCE_V4.zip'
+      - 'REAL_NOW_060_DOWNLOAD.zip'
       - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Extract Android project source
         run: |
-          unzip -o REAL_NOW_ANDROID_SOURCE_V4.zip -d ./android-source
+          unzip -o REAL_NOW_060_DOWNLOAD.zip -d ./android-source
 
       - name: Set up Java
         uses: actions/setup-java@v4
