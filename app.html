@@ -216,18 +216,22 @@ html
             "Sibiu": [45.7983, 24.1256], "Brașov": [45.6580, 25.6012],
             "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949],
             "Oradea": [47.0465, 21.9189], "Galați": [45.4353, 28.0080],
-            "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
+            "Ploiești": [44.9333, 26.0333], "Pitești": [44.8565, 24.8692],
+            "Arad": [46.1667, 21.3167], "Bacău": [46.5667, 26.9167],
+            "Baia Mare": [47.6667, 23.5833], "Suceava": [47.6333, 26.2500],
+            "Târgu Mureș": [46.5333, 24.5500], "Mediaș": [46.1667, 24.3500],
+            "Sighișoara": [46.2169, 24.7911], "Făgăraș": [45.8500, 24.9667]
         };
 
         const categorySearchTerms = {
             "Restaurante": "restaurant", 
-            "Farmacii": "pharmacy", 
+            "Farmacii": "farmacie", 
             "Magazine": "supermarket", 
-            "Benzinării": "fuel", 
-            "Instituții Publice": "townhall", 
-            "Piețe": "marketplace",
-            "Autogări": "bus_station", 
-            "Gări de Tren": "train_station"
+            "Benzinării": "benzinarie", 
+            "Instituții Publice": "primaria", 
+            "Piețe": "piata",
+            "Autogări": "autogara", 
+            "Gări de Tren": "gara"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -344,7 +348,7 @@ html
 
             let term = categorySearchTerms[categoryName];
             // Căutăm în limita razelor din jurul coordonatelor orașului (viewbox) pentru a prinde toate locațiile
-            let delta = 0.1; // aproximativ 10km
+            let delta = 0.15; // aproximativ 15km
             let viewbox = `${lng-delta},${lat+delta},${lng+delta},${lat-delta}`;
             let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}&viewbox=${viewbox}&bounded=1&limit=50&extratags=1`;
 
