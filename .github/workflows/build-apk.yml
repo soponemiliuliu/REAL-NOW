@@ -8,11 +8,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Extract source
-        run: unzip -o REAL_NOW_060_DOWNLOAD.zip -d ./web-source
       - name: Create Nitron config
         run: |
-          cd ./web-source
           echo '{
             "name": "Real Now",
             "packageId": "com.realnow.app",
@@ -23,10 +20,9 @@ jobs:
           }' > nitron.config.json
       - name: Build APK with Nitron
         run: |
-          cd ./web-source
           npx nitron build
       - uses: actions/upload-artifact@v4
         with:
           name: REAL-NOW-APK
-          path: web-source/dist/app.apk
+          path: dist/app.apk
           if-no-files-found: error
