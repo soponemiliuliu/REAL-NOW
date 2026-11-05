@@ -11,8 +11,10 @@ html
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
-            color: white; padding-bottom: 70px; overflow-x: hidden;
+            /* FUNDAL BEJ / CREM CALD */
+            background-color: #f5eedc; 
+            color: #333; /* Scris închis la culoare pentru contrast */
+            padding-bottom: 70px; overflow-x: hidden;
         }
 
         .jder {
@@ -20,30 +22,30 @@ html
             background-image: url('https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=150&q=80'); 
             background-size: cover; background-position: center;
             border-radius: 50%; border: 3px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 1000; transition: all 2s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3); z-index: 1000; transition: all 2s ease-in-out;
         }
         .jder.stop { transform: scale(1.3); border-color: #ffcc00; }
 
         .page { display: none; }
         .page.active { display: block; }
 
-        .header { text-align: center; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 0 0 20px 20px; }
-        .header h1 { margin: 0; font-size: 32px; color: #ff3333; text-shadow: 2px 2px 4px #000; }
+        .header { text-align: center; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 0 0 20px 20px; border-bottom: 2px solid #e0d4c3;}
+        .header h1 { margin: 0; font-size: 32px; color: #d32f2f; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
         
-        .location-bar { background: white; color: black; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; }
+        .location-bar { background: white; color: #333; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .category-btn { background-color: #333; border-radius: 12px; overflow: hidden; color: white; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%;}
+        .category-btn { background-color: white; border-radius: 12px; overflow: hidden; color: #333; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         .category-btn img { width: 100%; height: 60px; object-fit: cover; }
-        .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 12px; }
+        .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 12px; color: white; }
         
         .bg-blue { background-color: #1e90ff; } .bg-green { background-color: #32cd32; }
         .bg-purple { background-color: #8a2be2; } .bg-red { background-color: #dc143c; }
         .bg-orange { background-color: #ff8c00; } .bg-teal { background-color: #008080; }
         .bg-brown { background-color: #8b4513; }
 
-        #map-main { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; }
-        #map-list { height: 200px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid white; display: none; }
+        #map-main { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        #map-list { height: 200px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid white; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2);}
 
         .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; position: sticky; top: 0; z-index: 100; }
         .sub-header button { background: none; border: none; color: white; font-size: 24px; margin-right: 15px; cursor: pointer; }
@@ -51,15 +53,15 @@ html
         
         .list-container { padding: 15px; }
         
-        .place-item { background: white; padding: 10px; margin-bottom: 10px; border-radius: 10px; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .place-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 10px; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); border-left: 4px solid #1e90ff; }
         .place-info { flex: 1; }
-        .place-info h4 { margin: 0 0 5px 0; font-size: 16px; }
+        .place-info h4 { margin: 0 0 5px 0; font-size: 16px; color: #222; }
         .place-info p { margin: 0; font-size: 12px; color: #666; }
-        .place-btn { background: #1e90ff; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; cursor: pointer; }
+        .place-btn { background: #1e90ff; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; }
 
         /* Chat & Review Styles */
-        .chat-box { padding: 15px; height: 40vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
-        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; word-wrap: break-word; }
+        .chat-box { padding: 15px; height: 35vh; overflow-y: auto; background: white; margin: 15px; border-radius: 15px; color: #333; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .chat-msg { background: #f1f1f1; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; word-wrap: break-word; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
         .chat-msg img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
         
@@ -70,21 +72,21 @@ html
         .btn-photo { background: #ff8c00; color: white; }
         .btn-send { background: #32cd32; color: white; padding: 10px 15px; border-radius: 20px; }
 
-        .emoji-picker { display: none; padding: 10px; background: white; margin: 0 15px; border-radius: 10px; font-size: 24px; text-align: center; }
+        .emoji-picker { display: none; padding: 10px; background: white; margin: 0 15px; border-radius: 10px; font-size: 24px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .emoji-picker span { cursor: pointer; margin: 0 5px; }
 
         /* Review Section */
-        .review-section { margin: 15px; padding: 15px; background: #fff; border-radius: 15px; color: #333; }
+        .review-section { margin: 15px; padding: 15px; background: #fff; border-radius: 15px; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .review-section h3 { margin-top: 0; font-size: 16px; }
         .stars { font-size: 24px; color: #ccc; cursor: pointer; }
-        .stars .active { color: #ffcc00; }
-        .review-input { width: 100%; padding: 10px; margin-top: 10px; border-radius: 10px; border: 1px solid #ccc; resize: none; }
+        .stars .active { color: #ffb300; }
+        .review-input { width: 100%; padding: 10px; margin-top: 10px; border-radius: 10px; border: 1px solid #ccc; resize: none; font-family: inherit; }
         .review-btn { background: #1e90ff; color: white; border: none; padding: 8px 15px; border-radius: 15px; margin-top: 10px; font-weight: bold; cursor: pointer; }
-        .existing-reviews { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; max-height: 150px; overflow-y: auto; }
+        .existing-reviews { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; max-height: 120px; overflow-y: auto; }
         .review-item { font-size: 13px; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
         .review-item strong { color: #1e90ff; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: black; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: #333; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -109,7 +111,7 @@ html
         </div>
         <div class="list-container">
             <div id="map-list"></div>
-            <div id="list-items"><p style="text-align:center;">Se încarcă datele reale de pe hartă...</p></div>
+            <div id="list-items"><p style="text-align:center;">Se încarcă datele reale...</p></div>
         </div>
     </div>
 
@@ -137,7 +139,6 @@ html
             <button class="btn-send" onclick="sendMsg()">Trimite</button>
         </div>
 
-        <!-- SECȚIUNEA DE RECENZII -->
         <div class="review-section">
             <h3>⭐ Lasă o recenzie</h3>
             <div class="stars" id="star-rating">
@@ -147,20 +148,18 @@ html
                 <span data-val="4">★</span>
                 <span data-val="5">★</span>
             </div>
-            <textarea class="review-input" id="review-text" rows="2" placeholder="Scrie părerea ta despre acest loc..."></textarea>
+            <textarea class="review-input" id="review-text" rows="2" placeholder="Scrie părerea ta..."></textarea>
             <button class="review-btn" onclick="submitReview()">Trimite Recenzia</button>
             
-            <div class="existing-reviews" id="existing-reviews">
-                <!-- Recenziile salvate vor apărea aici -->
-            </div>
+            <div class="existing-reviews" id="existing-reviews"></div>
         </div>
     </div>
 
     <div class="bottom-nav">
         <div onclick="goHome()">🏠<br>Acasă</div>
-        <div onclick="alert('Preferatele vor fi adăugate curând!')">⭐<br>Preferate</div>
-        <div onclick="alert('Notificările vor fi adăugate curând!')">🔔<br>Notificări</div>
-        <div onclick="alert('Aici va apărea lista cu limbi străine!')">🌐<br>Limbă</div>
+        <div onclick="alert('În curând!')">⭐<br>Preferate</div>
+        <div onclick="alert('În curând!')">🔔<br>Notificări</div>
+        <div onclick="alert('În curând!')">🌐<br>Limbă</div>
     </div>
 
     <script>
@@ -197,20 +196,20 @@ html
             "Galați": [45.4353, 28.0080]
         };
 
-        // Maparea categoriilor din aplicatie catre tag-urile OpenStreetMap
-        const categoryTags = {
-            "Restaurante": '["amenity"="restaurant"]',
-            "Farmacii": '["amenity"="pharmacy"]',
-            "Magazine": '["shop"="supermarket"]',
-            "Benzinării": '["amenity"="fuel"]',
-            "Instituții Publice": '["amenity"="townhall"]',
-            "Piețe": '["amenity"="marketplace"]',
-            "Autogări": '["amenity"="bus_station"]',
-            "Gări de Tren": '["railway"="station"]'
+        // Maparea categoriilor pentru Nominatim
+        const categorySearchTerms = {
+            "Restaurante": "restaurant",
+            "Farmacii": "pharmacy",
+            "Magazine": "supermarket",
+            "Benzinării": "fuel",
+            "Instituții Publice": "townhall",
+            "Piețe": "marketplace",
+            "Autogări": "bus_station",
+            "Gări de Tren": "train_station"
         };
 
         function getCityCoords(city) {
-            return cityCoords[city] || [45.9432, 24.9668]; // Default: centrul Romaniei
+            return cityCoords[city] || [45.9432, 24.9668];
         }
 
         // ================= INITIALIZARE =================
@@ -275,43 +274,31 @@ html
             }
         }
 
-        // ================= LISTE REALE & CHAT =================
+        // ================= FUNCTIA CU NOMINATIM (MULT MAI STABILA) =================
         function openCategory(categoryName, color) {
             currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
             
-            // Aratam un mesaj de incarcare
-            document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:white;'>Se caută locații reale pe OpenStreetMap...</p>";
+            document.getElementById('list-items').innerHTML = "<p style='text-align:center;'>Se caută date reale...</p>";
             document.getElementById('map-list').style.display = 'block';
             
             showPage('page-list');
-            fetchRealPlaces(categoryName);
-        }
-
-        function fetchRealPlaces(categoryName) {
-            let [lat, lng] = getCityCoords(currentCityName);
-            let tag = categoryTags[categoryName];
             
-            if (!tag) {
-                document.getElementById('list-items').innerHTML = "<p style='color:white; text-align:center;'>Categoria nu are date momentan.</p>";
-                return;
-            }
+            let [lat, lng] = getCityCoords(currentCityName);
+            let term = categorySearchTerms[categoryName];
 
-            // Interogare Overpass API pentru locatii reale in raza de 5km
-            let query = `[out:json][timeout:25];(node${tag}(around:5000,${lat},${lng});way${tag}(around:5000,${lat},${lng}););out center 20;`;
-            let url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+            // Trimitem cererea catre Nominatim
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+in+${currentCityName}&limit=20`;
 
-            fetch(url)
+            fetch(url, { headers: { 'Accept-Language': 'ro' } })
                 .then(response => response.json())
                 .then(data => {
-                    let elements = data.elements;
                     let html = "";
                     
-                    if (elements.length === 0) {
-                        html = "<p style='color:white; text-align:center;'>Nu s-au găsit locații în această zonă.</p>";
+                    if (data.length === 0) {
+                        html = "<p style='text-align:center;'>Nu s-au găsit date.</p>";
                     } else {
-                        // Initializam harta
                         if (!mapList) {
                             mapList = L.map('map-list').setView([lat, lng], 12);
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
@@ -320,30 +307,27 @@ html
                             mapList.setView([lat, lng], 12);
                         }
 
-                        elements.forEach(el => {
-                            let name = el.tags.name || "Locație fără nume";
-                            let opening = el.tags.opening_hours || "Program nedefinit";
-                            let elLat = el.lat || (el.center && el.center.lat);
-                            let elLng = el.lon || (el.center && el.center.lon);
+                        data.forEach(place => {
+                            let name = place.name || place.display_name.split(',')[0];
+                            let elLat = place.lat;
+                            let elLng = place.lon;
 
-                            if(elLat && elLng) {
-                                html += `
-                                    <div class="place-item">
-                                        <div class="place-info">
-                                            <h4>${name}</h4>
-                                            <p>🕒 Program: ${opening}</p>
-                                        </div>
-                                        <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                            html += `
+                                <div class="place-item">
+                                    <div class="place-info">
+                                        <h4>${name}</h4>
+                                        <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
                                     </div>
-                                `;
-                                L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b><br>${opening}`);
-                            }
+                                    <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                                </div>
+                            `;
+                            L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b>`);
                         });
                     }
                     document.getElementById('list-items').innerHTML = html;
                 })
                 .catch(err => {
-                    document.getElementById('list-items').innerHTML = "<p style='color:white; text-align:center;'>Eroare la conectarea cu serverul de hărți. Verifică internetul.</p>";
+                    document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:red;'>Eroare de rețea. Verifică conexiunea la internet.</p>";
                 });
         }
 
@@ -356,7 +340,6 @@ html
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
             
-            // Resetam recenziile
             document.getElementById('review-text').value = "";
             setStars(0);
             loadReviews(placeName);
@@ -403,7 +386,6 @@ html
         // ================= LOGICA DE RECENZII =================
         let currentRating = 0;
 
-        // Seteaza stelele vizual
         function setStars(val) {
             currentRating = val;
             document.querySelectorAll('#star-rating span').forEach(star => {
@@ -415,43 +397,34 @@ html
             });
         }
 
-        // Adaugam evenimente pe stele
         document.querySelectorAll('#star-rating span').forEach(star => {
             star.addEventListener('click', function() {
                 setStars(parseInt(this.getAttribute('data-val')));
             });
         });
 
-        // Trimite recenzia
         function submitReview() {
             let text = document.getElementById('review-text').value;
             if (currentRating === 0 || text.trim() === "") {
                 alert("Te rog acordă o notă (stele) și scrie un text.");
                 return;
             }
-
-            // Salvam in localStorage (memoria telefonului)
             let reviews = JSON.parse(localStorage.getItem('reviews_' + currentPlaceName)) || [];
             reviews.push({ rating: currentRating, text: text, date: new Date().toLocaleDateString('ro-RO') });
             localStorage.setItem('reviews_' + currentPlaceName, JSON.stringify(reviews));
-
-            // Resetam si reincarcam
             document.getElementById('review-text').value = "";
             setStars(0);
             loadReviews(currentPlaceName);
             alert("Recenzia a fost adăugată!");
         }
 
-        // Incarca recenziile existente
         function loadReviews(placeName) {
             let reviews = JSON.parse(localStorage.getItem('reviews_' + placeName)) || [];
             let container = document.getElementById('existing-reviews');
-            
             if (reviews.length === 0) {
                 container.innerHTML = "<p style='font-size:12px; color:#999;'>Nu există recenzii încă.</p>";
                 return;
             }
-
             let html = "";
             reviews.forEach(r => {
                 let starsDisplay = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
