@@ -77,13 +77,13 @@ html
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: #333; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
+        .loading { text-align: center; font-weight: bold; margin-top: 20px; color: #555; }
     </style>
 </head>
 <body>
 
     <div class="omulet" id="omulet"></div>
 
-    <!-- PAGINA 1 -->
     <div id="page-home" class="page active">
         <div class="header"><h1>Real Now</h1></div>
         <div class="location-bar" onclick="changeCity()">
@@ -94,7 +94,6 @@ html
         <div id="map-main"></div>
     </div>
 
-    <!-- PAGINA 2 -->
     <div id="page-list" class="page" style="display:none;">
         <div class="sub-header" id="list-header">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -106,7 +105,6 @@ html
         </div>
     </div>
 
-    <!-- PAGINA 3 -->
     <div id="page-chat" class="page" style="display:none;">
         <div class="sub-header" style="background: #1e90ff;">
             <button onclick="window.location.hash = 'list'">⬅</button>
@@ -181,6 +179,17 @@ html
             "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949]
         };
 
+        const categorySearchTerms = {
+            "Restaurante": "restaurant",
+            "Farmacii": "pharmacy",
+            "Magazine": "supermarket",
+            "Benzinării": "fuel",
+            "Instituții Publice": "townhall",
+            "Piețe": "marketplace",
+            "Autogări": "bus_station",
+            "Gări de Tren": "train_station"
+        };
+
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
         // ================= INITIALIZARE =================
@@ -212,7 +221,6 @@ html
                 let btn = document.createElement('button');
                 btn.className = "category-btn";
                 btn.innerHTML = `<img src="${cat.icon}"><div class="btn-text ${cat.color}">${cat.name}</div>`;
-                // AICI AM SCHIMBAT: Folosim link-uri (hash) pentru a schimba pagina
                 btn.onclick = function() { window.location.hash = 'list'; openCategory(cat.name, cat.color); };
                 grid.appendChild(btn);
             });
@@ -227,18 +235,15 @@ html
         }
 
         function changeCity() {
-            let city = prompt("Introdu numele orașului:", currentCityName);
+            let city = prompt("Introdu numele orașului (ex: București, Timișoara, Constanța):", currentCityName);
             if (city) { currentCityName = city; renderCategories(city); }
         }
 
-        // Aceasta functie decide ce pagina se vede in functie de link
         function checkPage() {
             let hash = window.location.hash;
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            
             if (hash === '#list') {
                 document.getElementById('page-list').style.display = 'block';
-                // Fortam harta sa se redeseneze
                 if (mapList) setTimeout(() => mapList.invalidateSize(), 200);
             } else if (hash === '#chat') {
                 document.getElementById('page-chat').style.display = 'block';
@@ -248,68 +253,61 @@ html
             }
             window.scrollTo(0,0);
         }
-
         window.addEventListener('hashchange', checkPage);
 
-        // ================= GENERARE LOCATII =================
-        function generateLocations(city, category) {
-            let locations = [];
-            let [baseLat, baseLng] = getCityCoords(city);
-            let names = [];
-            if(category === "Restaurante") names = ["La Bunica", "Hanul", "Trattoria", "Bistro", "Steak House", "Pizzerie", "Crama", "Pub", "Cafenea"];
-            else if(category === "Farmacii") names = ["Farmacia Catena", "Farmacia Dona", "Help Net", "Sensiblu", "Farmacia Tei", "Farmacia Central", "Farmacia Verde", "Farmacia Vital"];
-            else if(category === "Magazine") names = ["Kaufland", "Lidl", "Carrefour", "Mega Image", "Profi", "Penny", "Auchan", "Supermarket"];
-            else if(category === "Instituții Publice") names = ["Primăria", "Poliția", "Spitalul", "Tribunalul", "ANAF", "Poșta", "Consiliul Județean", "Biblioteca"];
-            else if(category === "Benzinării") names = ["OMV", "Petrom", "Rompetrol", "Lukoil", "Mol", "SOCAR"];
-            else if(category === "Piețe") names = ["Piața Centrală", "Piața Mare", "Piața Agroalimentară", "Piața Veche"];
-            else if(category === "Autogări") names = ["Autogara Beta", "Autogara Fany", "Autogara Voiajor", "Autogara Nord"];
-            else if(category === "Gări de Tren") names = ["Gara Centrală", "Gara de Nord", "Gara de Est", "Gara de Vest"];
-            else names = ["Locație", "Punct de interes", "Unitate"];
-
-            for(let i=1; i<=20; i++) {
-                let name = names[(i-1) % names.length] + " " + city.split('-')[0] + " " + (i > names.length ? i : "");
-                locations.push({
-                    name: name.trim(), program: (i % 4 === 0) ? "24/7" : "08:00 - 22:00",
-                    lat: baseLat + (Math.random() - 0.5) * 0.05, lng: baseLng + (Math.random() - 0.5) * 0.05
-                });
-            }
-            return locations;
-        }
-
+        // ================= CONECTARE LA SERVER (DATE REALE) =================
         function openCategory(categoryName, color) {
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
             document.getElementById('map-list').style.display = 'block';
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale de pe hartă...</div>";
 
-            let places = generateLocations(currentCityName, categoryName);
-            let [baseLat, baseLng] = getCityCoords(currentCityName);
-
+            let [lat, lng] = getCityCoords(currentCityName);
             if (!mapList) {
-                mapList = L.map('map-list').setView([baseLat, baseLng], 12);
+                mapList = L.map('map-list').setView([lat, lng], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
             } else {
                 mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
-                mapList.setView([baseLat, baseLng], 12);
+                mapList.setView([lat, lng], 12);
             }
 
-            let html = "";
-            places.forEach(place => {
-                html += `
-                    <div class="place-item">
-                        <div class="place-info">
-                            <h4>${place.name}</h4>
-                            <p>🕒 Program: ${place.program}</p>
-                        </div>
-                        <button class="place-btn" onclick="window.location.hash = 'chat'; openChat('${place.name.replace(/'/g, "\\'")}')">Chat</button>
-                    </div>
-                `;
-                L.marker([place.lat, place.lng]).addTo(mapList).bindPopup(`<b>${place.name}</b><br>${place.program}`);
-            });
-            document.getElementById('list-items').innerHTML = html;
+            let term = categorySearchTerms[categoryName];
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+in+${currentCityName}&limit=20`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let html = "";
+                    if (data.length === 0) {
+                        html = "<div class='loading'>Nu s-au găsit date pentru această zonă.</div>";
+                    } else {
+                        data.forEach(place => {
+                            let name = place.name || place.display_name.split(',')[0];
+                            let elLat = place.lat;
+                            let elLng = place.lon;
+
+                            html += `
+                                <div class="place-item">
+                                    <div class="place-info">
+                                        <h4>${name}</h4>
+                                        <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
+                                    </div>
+                                    <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                                </div>
+                            `;
+                            L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b>`);
+                        });
+                    }
+                    document.getElementById('list-items').innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
+                });
         }
 
         // ================= CHAT =================
         function openChat(placeName) {
+            window.location.hash = 'chat';
             currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
