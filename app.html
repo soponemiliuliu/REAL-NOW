@@ -214,19 +214,20 @@ html
             "Cluj-Napoca": [46.7712, 23.6236], "București": [44.4268, 26.1025],
             "Timișoara": [45.7489, 21.2087], "Iași": [47.1585, 27.6014],
             "Sibiu": [45.7983, 24.1256], "Brașov": [45.6580, 25.6012],
-            "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949]
+            "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949],
+            "Oradea": [47.0465, 21.9189], "Galați": [45.4353, 28.0080],
+            "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
         };
 
-        // Am modificat termenii de cautare pentru a returna rezultatele dorite
         const categorySearchTerms = {
             "Restaurante": "restaurant", 
-            "Farmacii": "farmacie", 
+            "Farmacii": "pharmacy", 
             "Magazine": "supermarket", 
-            "Benzinării": "benzinarie", 
-            "Instituții Publice": "primarie", 
-            "Piețe": "piata",
-            "Autogări": "autogara", 
-            "Gări de Tren": "gara"
+            "Benzinării": "fuel", 
+            "Instituții Publice": "townhall", 
+            "Piețe": "marketplace",
+            "Autogări": "bus_station", 
+            "Gări de Tren": "train_station"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -293,8 +294,13 @@ html
         }
 
         function changeCity() {
-            let city = prompt("Introdu numele orașului (ex: București, Timișoara, Constanța):", currentCityName);
-            if (city) { currentCityName = city; renderCategories(city); }
+            let city = prompt("Introdu numele orașului (ex: București, Timișoara, Sibiu, Brașov):", currentCityName);
+            if (city) { 
+                currentCityName = city; 
+                renderCategories(city); 
+                let [lat, lng] = getCityCoords(city);
+                if(mapMain) mapMain.setView([lat, lng], 12);
+            }
         }
 
         function checkPage() {
@@ -337,7 +343,10 @@ html
             }
 
             let term = categorySearchTerms[categoryName];
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+${currentCityName}&limit=30&extratags=1`;
+            // Căutăm în limita razelor din jurul coordonatelor orașului (viewbox) pentru a prinde toate locațiile
+            let delta = 0.1; // aproximativ 10km
+            let viewbox = `${lng-delta},${lat+delta},${lng+delta},${lat-delta}`;
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}&viewbox=${viewbox}&bounded=1&limit=50&extratags=1`;
 
             fetch(url)
                 .then(response => response.json())
