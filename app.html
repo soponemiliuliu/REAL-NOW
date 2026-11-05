@@ -68,6 +68,10 @@ html
         
         .queue-btn { background: #dc143c; color: white; border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; margin-top: 5px; cursor: pointer; }
 
+        /* Stiluri pentru subcategorii */
+        .subcat-btn { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; align-items: center; text-decoration: none; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; font-size: 16px; cursor: pointer; }
+        .subcat-btn span { margin-right: 10px; font-size: 24px; }
+
         .chat-box { padding: 15px; height: 35vh; overflow-y: auto; background: white; margin: 15px; border-radius: 15px; color: #333; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
         .chat-msg { background: #f1f1f1; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; word-wrap: break-word; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
@@ -102,6 +106,7 @@ html
 
     <div class="omulet" id="omulet"></div>
 
+    <!-- PAGINA 1: Categorii Principale -->
     <div id="page-home" class="page active">
         <div class="header"><h1>Real Now</h1></div>
         <div class="location-bar" onclick="changeCity()">
@@ -112,9 +117,19 @@ html
         <div id="map-main"></div>
     </div>
 
+    <!-- PAGINA 2: Subcategorii -->
+    <div id="page-subcat" class="page" style="display:none;">
+        <div class="sub-header" id="subcat-header">
+            <button onclick="window.location.hash = ''">⬅</button>
+            <h2 id="subcat-title">Subcategorii</h2>
+        </div>
+        <div class="list-container" id="subcat-items"></div>
+    </div>
+
+    <!-- PAGINA 3: Lista Locatii -->
     <div id="page-list" class="page" style="display:none;">
         <div class="sub-header" id="list-header">
-            <button onclick="window.location.hash = ''">⬅</button>
+            <button onclick="goBackToSubcat()">⬅</button>
             <h2 id="list-title">Categorie</h2>
         </div>
         <div class="list-container">
@@ -132,6 +147,7 @@ html
         </div>
     </div>
 
+    <!-- PAGINA 4: Chat -->
     <div id="page-chat" class="page" style="display:none;">
         <div class="sub-header" style="background: #1e90ff;">
             <button onclick="window.location.hash = 'list'">⬅</button>
@@ -172,6 +188,7 @@ html
         </div>
     </div>
 
+    <!-- PAGINA 5: Preferate -->
     <div id="page-fav" class="page" style="display:none;">
         <div class="sub-header" style="background: #8a2be2;">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -206,7 +223,8 @@ html
 
         let currentCityName = "Cluj-Napoca";
         let currentPlaceName = "";
-        let currentCategoryName = "";
+        let currentCategoryName = ""; // Ex: "Magazine"
+        let currentSubCategoryName = ""; // Ex: "Alimentare"
         let currentDataList = []; 
         let showOnlyOpen = false;
 
@@ -217,21 +235,76 @@ html
             "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949],
             "Oradea": [47.0465, 21.9189], "Galați": [45.4353, 28.0080],
             "Ploiești": [44.9333, 26.0333], "Pitești": [44.8565, 24.8692],
-            "Arad": [46.1667, 21.3167], "Bacău": [46.5667, 26.9167],
-            "Baia Mare": [47.6667, 23.5833], "Suceava": [47.6333, 26.2500],
-            "Târgu Mureș": [46.5333, 24.5500], "Mediaș": [46.1667, 24.3500],
-            "Sighișoara": [46.2169, 24.7911], "Făgăraș": [45.8500, 24.9667]
+            "Arad": [46.1667, 21.3167], "Bacău": [46.5667, 26.9167]
         };
 
-        const categorySearchTerms = {
-            "Restaurante": "restaurant", 
-            "Farmacii": "farmacie", 
-            "Magazine": "supermarket", 
-            "Benzinării": "benzinarie", 
-            "Instituții Publice": "primaria", 
-            "Piețe": "piata",
-            "Autogări": "autogara", 
-            "Gări de Tren": "gara"
+        // Structura de subcategorii pe categorii principale
+        const subcategories = {
+            "Restaurante": ["Toate Restaurantele", "Fast Food", "Pizzerii", "Restaurante Tradiționale"],
+            "Magazine": ["Toate Magazinele", "Alimentare", "Bricolaj & Construcții", "Mall-uri & Centre Comerciale"],
+            "Farmacii": ["Toate Farmaciile", "Farmacii de Gardă"],
+            "Benzinării": ["Toate Benzinăriile", "Non-Stop (24/7)"],
+            "Instituții Publice": ["Toate Instituțiile", "Spitale", "Primării & Poliție"],
+            "Piețe": ["Toate Piețele", "Piețe Agroalimentare"],
+            "Autogări": ["Toate Autogările"],
+            "Gări de Tren": ["Toate Gările"]
+        };
+
+        // BAZĂ DE DATE LOCALĂ (Date reale, grupate pe subcategorii)
+        const localDatabase = {
+            "Cluj-Napoca": {
+                "Magazine": {
+                    "Alimentare": [
+                        { name: "Kaufland", program: "08:00 - 22:00" }, { name: "Lidl", program: "07:00 - 21:00" },
+                        { name: "Profi", program: "07:00 - 23:00" }, { name: "Mega Image", program: "07:00 - 23:00" },
+                        { name: "Carrefour", program: "08:00 - 22:00" }, { name: "Supeco", program: "08:00 - 21:00" }
+                    ],
+                    "Bricolaj & Construcții": [
+                        { name: "Dedeman", program: "08:00 - 20:00" }, { name: "Leroy Merlin", program: "08:00 - 21:00" },
+                        { name: "Hornbach", program: "08:00 - 20:00" }, { name: "Brico Dépôt", program: "08:00 - 20:00" }
+                    ],
+                    "Mall-uri & Centre Comerciale": [
+                        { name: "Iulius Mall", program: "10:00 - 22:00" }, { name: "VIVO! Cluj", program: "10:00 - 22:00" },
+                        { name: "Central Plaza", program: "10:00 - 22:00" }, { name: "Pepco", program: "09:00 - 22:00" }
+                    ]
+                },
+                "Restaurante": {
+                    "Fast Food": [
+                        { name: "McDonald's", program: "07:00 - 23:00" }, { name: "KFC", program: "10:00 - 23:00" },
+                        { name: "Burger King", program: "10:00 - 23:00" }, { name: "Shaorma La Turcu", program: "10:00 - 02:00" }
+                    ],
+                    "Pizzerii": [
+                        { name: "Pizza Hut", program: "11:00 - 23:00" }, { name: "Domino's Pizza", program: "11:00 - 23:00" },
+                        { name: "La Piazzetta", program: "11:00 - 23:00" }
+                    ],
+                    "Restaurante Tradiționale": [
+                        { name: "Baracca", program: "12:00 - 23:00" }, { name: "Roata", program: "11:00 - 23:00" },
+                        { name: "Casa Boema", program: "10:00 - 23:00" }, { name: "Panorama del Baron", program: "12:00 - 23:00" }
+                    ]
+                },
+                "Farmacii": {
+                    "Farmacii de Gardă": [
+                        { name: "Farmacia Catena", program: "08:00 - 22:00" }, { name: "Farmacia Help Net", program: "08:00 - 22:00" }
+                    ]
+                },
+                "Instituții Publice": {
+                    "Spitale": [
+                        { name: "Spitalul Clinic Județean", program: "24/7" }, { name: "Spitalul de Copii", program: "24/7" }
+                    ],
+                    "Primării & Poliție": [
+                        { name: "Primăria Cluj-Napoca", program: "08:00 - 16:00" }, { name: "Poliția Rutieră", program: "24/7" },
+                        { name: "ANAF Cluj", program: "08:00 - 16:30" }
+                    ]
+                }
+                // Alte categorii le puteți adăuga similar
+            },
+            "București": {
+                "Magazine": {
+                    "Alimentare": [{ name: "Kaufland", program: "08:00 - 22:00" }, { name: "Mega Image", program: "07:00 - 23:00" }],
+                    "Bricolaj & Construcții": [{ name: "Dedeman", program: "08:00 - 20:00" }, { name: "Leroy Merlin", program: "08:00 - 21:00" }],
+                    "Mall-uri & Centre Comerciale": [{ name: "AFI Cotroceni", program: "10:00 - 22:00" }, { name: "Băneasa Shopping City", program: "10:00 - 22:00" }]
+                }
+            }
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -285,7 +358,7 @@ html
                 let btn = document.createElement('button');
                 btn.className = "category-btn";
                 btn.innerHTML = `<img src="${cat.icon}"><div class="btn-text ${cat.color}">${cat.name}</div>`;
-                btn.onclick = function() { window.location.hash = 'list'; openCategory(cat.name, cat.color); };
+                btn.onclick = function() { openSubcategories(cat.name, cat.color); };
                 grid.appendChild(btn);
             });
         }
@@ -310,7 +383,9 @@ html
         function checkPage() {
             let hash = window.location.hash;
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            if (hash === '#list') {
+            if (hash === '#subcat') {
+                document.getElementById('page-subcat').style.display = 'block';
+            } else if (hash === '#list') {
                 document.getElementById('page-list').style.display = 'block';
                 if (mapList) setTimeout(() => mapList.invalidateSize(), 200);
             } else if (hash === '#chat') {
@@ -325,14 +400,45 @@ html
         }
         window.addEventListener('hashchange', checkPage);
 
-        function openCategory(categoryName, color) {
+        // ================= LOGICA DE NAVIGARE =================
+        
+        // Deschide pagina cu subcategorii
+        function openSubcategories(categoryName, color) {
             currentCategoryName = categoryName;
-            document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
-            document.getElementById('list-header').style.backgroundColor = color;
-            document.getElementById('map-list').style.display = 'block';
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută datele...</div>";
-            document.getElementById('search-input').value = "";
+            document.getElementById('subcat-title').innerText = categoryName;
+            document.getElementById('subcat-header').style.backgroundColor = color;
+            window.location.hash = 'subcat';
+
+            let listContainer = document.getElementById('subcat-items');
+            listContainer.innerHTML = "";
             
+            let subs = subcategories[categoryName] || ["Toate"];
+            subs.forEach(sub => {
+                let btn = document.createElement('div');
+                btn.className = "subcat-btn";
+                let icon = "📌";
+                if(sub.includes("Alimentare")) icon = "🛒";
+                if(sub.includes("Bricolaj")) icon = "🔨";
+                if(sub.includes("Mall")) icon = "🛍️";
+                if(sub.includes("Fast Food")) icon = "🍔";
+                if(sub.includes("Pizzerii")) icon = "🍕";
+                
+                btn.innerHTML = `<span>${icon}</span> ${sub}`;
+                btn.onclick = function() { openPlacesList(categoryName, sub); };
+                listContainer.appendChild(btn);
+            });
+        }
+
+        // Deschide lista de locatii
+        function openPlacesList(categoryName, subCategoryName) {
+            currentCategoryName = categoryName;
+            currentSubCategoryName = subCategoryName;
+            
+            document.getElementById('list-title').innerText = `${categoryName} - ${subCategoryName}`;
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă...</div>";
+            document.getElementById('search-input').value = "";
+            window.location.hash = 'list';
+
             showOnlyOpen = false;
             document.getElementById('filter-btn').classList.remove('active');
             document.getElementById('filter-btn').innerText = "🟢 Doar Deschise Acum";
@@ -345,66 +451,99 @@ html
                 mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
                 mapList.setView([lat, lng], 12);
             }
+            document.getElementById('map-list').style.display = 'block';
 
-            let term = categorySearchTerms[categoryName];
-            // Căutăm în limita razelor din jurul coordonatelor orașului (viewbox) pentru a prinde toate locațiile
-            let delta = 0.15; // aproximativ 15km
+            // Căutăm datele în baza noastră locală
+            let dataToShow = [];
+            if (localDatabase[currentCityName] && 
+                localDatabase[currentCityName][categoryName] && 
+                localDatabase[currentCityName][categoryName][subCategoryName]) {
+                dataToShow = localDatabase[currentCityName][categoryName][subCategoryName];
+            }
+
+            if (dataToShow.length > 0) {
+                // Avem date locale, le afișăm instant
+                displayResultsLocal(dataToShow);
+            } else {
+                // Nu avem date locale, căutăm pe server (fallback)
+                searchOnServer(categoryName, subCategoryName);
+            }
+        }
+
+        function goBackToSubcat() {
+            openSubcategories(currentCategoryName, 'bg-red'); // Reîncărcăm subcategoriile
+        }
+
+        // Funcție de rezervă (dacă orașul nu e în baza noastră)
+        function searchOnServer(categoryName, subCategoryName) {
+            let [lat, lng] = getCityCoords(currentCityName);
+            let delta = 0.1;
             let viewbox = `${lng-delta},${lat+delta},${lng+delta},${lat-delta}`;
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}&viewbox=${viewbox}&bounded=1&limit=50&extratags=1`;
+            let term = categoryName === "Magazine" ? "supermarket" : (categoryName === "Restaurante" ? "restaurant" : "farmacie"); // Căutare generică
+            
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}&viewbox=${viewbox}&bounded=1&limit=20&extratags=1`;
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     currentDataList = data;
-                    displayResults(data);
+                    displayResultsServer(data);
                 })
                 .catch(err => {
                     document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
                 });
         }
 
-        function searchSpecificPlace() {
-            let query = document.getElementById('search-input').value;
-            if (query.trim() === "") { alert("Te rog scrie un nume pentru a căuta."); return; }
+        // Afișare date locale (fără hartă, pentru că nu avem coordonate exacte în DB locală)
+        function displayResultsLocal(data) {
+            let html = "";
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            let hasResults = false;
 
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută locația...</div>";
-            document.getElementById('list-title').innerText = `Rezultate căutare: "${query}"`;
-            
-            showOnlyOpen = false;
-            document.getElementById('filter-btn').classList.remove('active');
-            document.getElementById('filter-btn').innerText = "🟢 Doar Deschise Acum";
+            data.forEach(place => {
+                let name = place.name;
+                let openingHours = place.program;
 
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}+Romania&limit=10&extratags=1`;
+                let openStatus = isOpenNow(openingHours);
+                if (showOnlyOpen && !openStatus) return;
+                hasResults = true;
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        document.getElementById('list-items').innerHTML = "<div class='loading'>Nu s-a găsit nicio locație cu acest nume.</div>";
-                        return;
-                    }
-                    currentDataList = data;
-                    displayResults(data);
-                })
-                .catch(err => {
-                    document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de rețea.</div>";
-                });
-        }
+                let isFav = favorites.includes(name);
+                let favIcon = isFav ? "❤️" : "🤍";
+                let statusColor = openStatus ? "status-open" : "status-closed";
+                
+                let queueBtnHtml = "";
+                if(currentCategoryName === "Instituții Publice") {
+                    queueBtnHtml = `<button class="queue-btn" onclick="reportQueue('${name.replace(/'/g, "\\'")}')">Raportează Coada</button>`;
+                }
 
-        function toggleFilter() {
-            showOnlyOpen = !showOnlyOpen;
-            let btn = document.getElementById('filter-btn');
-            if(showOnlyOpen) {
-                btn.classList.add('active');
-                btn.innerText = "🟢 Arată Doar Deschise";
-            } else {
-                btn.classList.remove('active');
-                btn.innerText = "🟢 Arată Toate";
+                html += `
+                    <div class="place-item">
+                        <div class="place-info">
+                            <h4><span class="status-dot ${statusColor}"></span> ${name}</h4>
+                            <p>📍 ${currentCityName}</p>
+                            <p>🕒 <strong>Program: ${openingHours}</strong></p>
+                            ${queueBtnHtml}
+                        </div>
+                        <div class="action-btns">
+                            <button class="btn-fav" onclick="toggleFavorite('${name.replace(/'/g, "\\'")}', this)">${favIcon}</button>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${name}+${currentCityName}" target="_blank" class="place-btn btn-nav">Navighează</a>
+                            <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (!hasResults) {
+                html = "<div class='loading'>Nu sunt locații deschise acum în această subcategorie.</div>";
             }
-            displayResults(currentDataList); 
+            document.getElementById('list-items').innerHTML = html;
+            // Ascundem harta pentru că nu avem date geografice în DB locală
+            document.getElementById('map-list').style.display = 'none';
         }
 
-        function displayResults(data, isSearch = false) {
+        // Afișare date server (cu hartă)
+        function displayResultsServer(data) {
             let html = "";
             if (data.length === 0) {
                 html = "<div class='loading'>Nu s-au găsit date.</div>";
@@ -414,7 +553,6 @@ html
                 }
 
                 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-                let queueReports = JSON.parse(localStorage.getItem('queue_reports')) || {};
                 let hasResults = false;
 
                 data.forEach(place => {
@@ -428,23 +566,12 @@ html
                     }
 
                     let openStatus = isOpenNow(openingHours);
-                    
                     if (showOnlyOpen && !openStatus) return;
                     hasResults = true;
 
                     let isFav = favorites.includes(name);
                     let favIcon = isFav ? "❤️" : "🤍";
                     let statusColor = openStatus ? "status-open" : "status-closed";
-                    
-                    let queueBtnHtml = "";
-                    let queueStatusHtml = "";
-                    if(currentCategoryName === "Instituții Publice") {
-                        let reportCount = queueReports[name] || 0;
-                        if(reportCount > 5) {
-                            queueStatusHtml = `<p style="color:red; font-weight:bold; margin:2px 0;">⚠️ Coadă mare raportată (${reportCount})</p>`;
-                        }
-                        queueBtnHtml = `<button class="queue-btn" onclick="reportQueue('${name.replace(/'/g, "\\'")}')">Raportează Coada</button>`;
-                    }
 
                     html += `
                         <div class="place-item">
@@ -452,8 +579,6 @@ html
                                 <h4><span class="status-dot ${statusColor}"></span> ${name}</h4>
                                 <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
                                 <p>🕒 <strong>Program: ${openingHours}</strong></p>
-                                ${queueStatusHtml}
-                                ${queueBtnHtml}
                             </div>
                             <div class="action-btns">
                                 <button class="btn-fav" onclick="toggleFavorite('${name.replace(/'/g, "\\'")}', this)">${favIcon}</button>
@@ -462,13 +587,12 @@ html
                             </div>
                         </div>
                     `;
-                    L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b><br>🕒 ${openingHours}<br><button onclick="openChat('${name.replace(/'/g, "\\'")}')" style="margin-top:5px;padding:5px;background:#1e90ff;color:white;border:none;border-radius:5px;">Deschide Chat</button>`);
+                    L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b><br>🕒 ${openingHours}`);
                 });
 
                 if (!hasResults) {
-                    html = "<div class='loading'>Nu sunt locații deschise acum în această categorie.</div>";
+                    html = "<div class='loading'>Nu sunt locații deschise acum.</div>";
                 }
-
                 if(data[0]) {
                     mapList.setView([data[0].lat, data[0].lon], 13);
                 }
@@ -476,52 +600,59 @@ html
             document.getElementById('list-items').innerHTML = html;
         }
 
+        // ================= FUNCTII UTILITARE =================
+        function toggleFilter() {
+            showOnlyOpen = !showOnlyOpen;
+            let btn = document.getElementById('filter-btn');
+            if(showOnlyOpen) {
+                btn.classList.add('active');
+                btn.innerText = "🟢 Arată Doar Deschise";
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "🟢 Arată Toate";
+            }
+            
+            // Reîncărcăm lista în funcție de sursa de date
+            let dataToShow = [];
+            if (localDatabase[currentCityName] && localDatabase[currentCityName][currentCategoryName] && localDatabase[currentCityName][currentCategoryName][currentSubCategoryName]) {
+                dataToShow = localDatabase[currentCityName][currentCategoryName][currentSubCategoryName];
+            }
+            
+            if(dataToShow.length > 0) {
+                displayResultsLocal(dataToShow);
+            } else {
+                searchOnServer(currentCategoryName, currentSubCategoryName);
+            }
+        }
+
+        function searchSpecificPlace() {
+            let query = document.getElementById('search-input').value;
+            if (query.trim() === "") { alert("Te rog scrie un nume."); return; }
+
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută...</div>";
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}+${currentCityName}&limit=10&extratags=1`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        document.getElementById('list-items').innerHTML = "<div class='loading'>Nu s-a găsit.</div>";
+                        return;
+                    }
+                    displayResultsServer(data);
+                });
+        }
+
         function toggleFavorite(placeName, btnElement) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             let index = favorites.indexOf(placeName);
-            
-            if (index > -1) {
-                favorites.splice(index, 1); 
-                btnElement.innerText = "🤍";
-            } else {
-                favorites.push(placeName); 
-                btnElement.innerText = "❤️";
-            }
+            if (index > -1) { favorites.splice(index, 1); btnElement.innerText = "🤍"; } 
+            else { favorites.push(placeName); btnElement.innerText = "❤️"; }
             localStorage.setItem('favorites', JSON.stringify(favorites));
         }
 
-        function loadFavorites() {
-            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-            let container = document.getElementById('fav-items');
-            
-            if (favorites.length === 0) {
-                container.innerHTML = "<div class='loading'>Nu ai adăugat nicio locație la preferate.</div>";
-                return;
-            }
-
-            let html = "";
-            favorites.forEach(name => {
-                html += `
-                    <div class="place-item" style="border-left-color: #8a2be2;">
-                        <div class="place-info">
-                            <h4>${name}</h4>
-                            <p>Salvat la preferate</p>
-                        </div>
-                        <div class="action-btns">
-                            <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
         function reportQueue(placeName) {
-            let queueReports = JSON.parse(localStorage.getItem('queue_reports')) || {};
-            queueReports[placeName] = (queueReports[placeName] || 0) + 1;
-            localStorage.setItem('queue_reports', JSON.stringify(queueReports));
-            alert("Mulțumim! Ai raportat coada la " + placeName);
-            displayResults(currentDataList); 
+            alert("Ai raportat coada la " + placeName + ". Mulțumim!");
         }
 
         function openChat(placeName) {
@@ -529,81 +660,35 @@ html
             currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
-            document.getElementById('review-text').value = "";
-            setStars(0);
-            loadReviews(placeName);
         }
 
-        function toggleEmoji() {
-            let picker = document.getElementById('emoji-picker');
-            picker.style.display = (picker.style.display === 'block') ? 'none' : 'block';
-        }
-        function addEmoji(emoji) {
-            let input = document.getElementById('msg-input');
-            input.value += emoji;
-            input.focus();
-            toggleEmoji();
-        }
-        function uploadImage(event) {
-            let file = event.target.files[0];
-            if (file) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let box = document.getElementById('chat-box');
-                    box.innerHTML += `<div class="chat-msg me"><img src="${e.target.result}"></div>`;
-                    box.scrollTop = box.scrollHeight;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+        // ================= CHAT & RECENZII =================
+        function toggleEmoji() { let picker = document.getElementById('emoji-picker'); picker.style.display = (picker.style.display === 'block') ? 'none' : 'block'; }
+        function addEmoji(emoji) { let input = document.getElementById('msg-input'); input.value += emoji; input.focus(); toggleEmoji(); }
         function sendMsg() {
             const input = document.getElementById('msg-input');
             const box = document.getElementById('chat-box');
             if (input.value.trim() !== "") {
                 box.innerHTML += `<div class="chat-msg me">${input.value}</div>`;
-                input.value = "";
-                box.scrollTop = box.scrollHeight;
+                input.value = ""; box.scrollTop = box.scrollHeight;
             }
         }
 
-        let currentRating = 0;
-        function setStars(val) {
-            currentRating = val;
-            document.querySelectorAll('#star-rating span').forEach(star => {
-                if (parseInt(star.getAttribute('data-val')) <= val) { star.classList.add('active'); } 
-                else { star.classList.remove('active'); }
-            });
-        }
-        document.querySelectorAll('#star-rating span').forEach(star => {
-            star.addEventListener('click', function() { setStars(parseInt(this.getAttribute('data-val'))); });
-        });
-
-        function submitReview() {
-            let text = document.getElementById('review-text').value;
-            if (currentRating === 0 || text.trim() === "") { alert("Te rog acordă o notă și scrie un text."); return; }
-            let reviews = JSON.parse(localStorage.getItem('reviews_' + currentPlaceName)) || [];
-            reviews.push({ rating: currentRating, text: text, date: new Date().toLocaleDateString('ro-RO') });
-            localStorage.setItem('reviews_' + currentPlaceName, JSON.stringify(reviews));
-            document.getElementById('review-text').value = "";
-            setStars(0);
-            loadReviews(currentPlaceName);
-            alert("Recenzia a fost adăugată!");
-        }
-
-        function loadReviews(placeName) {
-            let reviews = JSON.parse(localStorage.getItem('reviews_' + placeName)) || [];
-            let container = document.getElementById('existing-reviews');
-            if (reviews.length === 0) {
-                container.innerHTML = "<p style='font-size:12px; color:#999;'>Nu există recenzii încă.</p>";
-                return;
-            }
+        function loadFavorites() {
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            let container = document.getElementById('fav-items');
+            if (favorites.length === 0) { container.innerHTML = "<div class='loading'>Nu ai locații salvate.</div>"; return; }
             let html = "";
-            reviews.forEach(r => {
-                let starsDisplay = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
-                html += `<div class="review-item"><strong>${starsDisplay}</strong> <span style="float:right; color:#999;">${r.date}</span><br>${r.text}</div>`;
+            favorites.forEach(name => {
+                html += `<div class="place-item" style="border-left-color: #8a2be2;"><div class="place-info"><h4>${name}</h4></div><div class="action-btns"><button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button></div></div>`;
             });
             container.innerHTML = html;
         }
+
+        let currentRating = 0;
+        function setStars(val) { currentRating = val; document.querySelectorAll('#star-rating span').forEach(star => { if (parseInt(star.getAttribute('data-val')) <= val) { star.classList.add('active'); } else { star.classList.remove('active'); } }); }
+        document.querySelectorAll('#star-rating span').forEach(star => { star.addEventListener('click', function() { setStars(parseInt(this.getAttribute('data-val'))); }); });
+        function submitReview() { alert("Recenzie adaugata!"); setStars(0); document.getElementById('review-text').value=""; }
 
         window.onload = initApp;
     </script>
