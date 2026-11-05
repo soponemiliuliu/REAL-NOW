@@ -39,6 +39,11 @@ html
         #map-main { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         #map-list { height: 200px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid white; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2);}
 
+        /* Bara de search */
+        .search-box { display: flex; margin-bottom: 15px; }
+        .search-box input { flex: 1; padding: 10px; border-radius: 20px 0 0 20px; border: 1px solid #ccc; border-right: none; font-family: inherit;}
+        .search-box button { padding: 10px 20px; border-radius: 0 20px 20px 0; border: none; background: #1e90ff; color: white; font-weight: bold; cursor: pointer; }
+
         .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; position: sticky; top: 0; z-index: 100; }
         .sub-header button { background: none; border: none; color: white; font-size: 24px; margin-right: 15px; cursor: pointer; }
         .sub-header h2 { margin: 0; font-size: 20px; }
@@ -100,6 +105,12 @@ html
             <h2 id="list-title">Categorie</h2>
         </div>
         <div class="list-container">
+            <!-- BARA DE CĂUTARE -->
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Caută un local anume...">
+                <button onclick="searchSpecificPlace()">Caută</button>
+            </div>
+
             <div id="map-list"></div>
             <div id="list-items"></div>
         </div>
@@ -171,6 +182,7 @@ html
         // ================= DATE =================
         let currentCityName = "Cluj-Napoca";
         let currentPlaceName = "";
+        let currentCategoryName = "";
 
         const cityCoords = {
             "Cluj-Napoca": [46.7712, 23.6236], "București": [44.4268, 26.1025],
@@ -257,10 +269,12 @@ html
 
         // ================= CONECTARE LA SERVER (DATE REALE) =================
         function openCategory(categoryName, color) {
+            currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
             document.getElementById('map-list').style.display = 'block';
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale de pe hartă...</div>";
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale...</div>";
+            document.getElementById('search-input').value = ""; // Golim search-ul
 
             let [lat, lng] = getCityCoords(currentCityName);
             if (!mapList) {
@@ -277,32 +291,75 @@ html
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    let html = "";
-                    if (data.length === 0) {
-                        html = "<div class='loading'>Nu s-au găsit date pentru această zonă.</div>";
-                    } else {
-                        data.forEach(place => {
-                            let name = place.name || place.display_name.split(',')[0];
-                            let elLat = place.lat;
-                            let elLng = place.lon;
-
-                            html += `
-                                <div class="place-item">
-                                    <div class="place-info">
-                                        <h4>${name}</h4>
-                                        <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
-                                    </div>
-                                    <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
-                                </div>
-                            `;
-                            L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b>`);
-                        });
-                    }
-                    document.getElementById('list-items').innerHTML = html;
+                    displayResults(data);
                 })
                 .catch(err => {
                     document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
                 });
+        }
+
+        // ================= FUNCTIA DE CĂUTARE SPECIFICĂ =================
+        function searchSpecificPlace() {
+            let query = document.getElementById('search-input').value;
+            if (query.trim() === "") {
+                alert("Te rog scrie un nume pentru a căuta.");
+                return;
+            }
+
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută locația...</div>";
+            document.getElementById('list-title').innerText = `Rezultate căutare: "${query}"`;
+
+            // Caută locația la nivel global (în toată România sau chiar lume)
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}+Romania&limit=10`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        document.getElementById('list-items').innerHTML = "<div class='loading'>Nu s-a găsit nicio locație cu acest nume.</div>";
+                        return;
+                    }
+                    displayResults(data, true);
+                })
+                .catch(err => {
+                    document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de rețea.</div>";
+                });
+        }
+
+        // ================= AFISARE REZULTATE (comună) =================
+        function displayResults(data, isSearch = false) {
+            let html = "";
+            if (data.length === 0) {
+                html = "<div class='loading'>Nu s-au găsit date.</div>";
+            } else {
+                // Curățăm harta de pinii vechi
+                if(mapList) {
+                    mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
+                }
+
+                data.forEach(place => {
+                    let name = place.name || place.display_name.split(',')[0];
+                    let elLat = place.lat;
+                    let elLng = place.lon;
+
+                    html += `
+                        <div class="place-item">
+                            <div class="place-info">
+                                <h4>${name}</h4>
+                                <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
+                            </div>
+                            <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                        </div>
+                    `;
+                    L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b><br><button onclick="openChat('${name.replace(/'/g, "\\'")}')" style="margin-top:5px;padding:5px;background:#1e90ff;color:white;border:none;border-radius:5px;">Deschide Chat</button>`);
+                });
+
+                // Mutăm harta pe primul rezultat
+                if(data[0]) {
+                    mapList.setView([data[0].lat, data[0].lon], 13);
+                }
+            }
+            document.getElementById('list-items').innerHTML = html;
         }
 
         // ================= CHAT =================
