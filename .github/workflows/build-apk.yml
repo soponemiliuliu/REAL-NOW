@@ -20,7 +20,7 @@ jobs:
             "entry": "app.html",
             "orientation": "portrait",
             "icon": "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-            "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
+            "permissions": ["INTERNET", "ACCESS_NETWORK_STATE", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
           }' > nitron.config.json
       - name: Build APK with Nitron
         run: |
