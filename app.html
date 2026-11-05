@@ -217,22 +217,27 @@ html
             "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949]
         };
 
+        // AICI AM MODIFICAT TERMENII DE CĂUTARE PENTRU A GĂSI MAI BINE
         const categorySearchTerms = {
-            "Restaurante": "restaurant", "Farmacii": "pharmacy", "Magazine": "supermarket",
-            "Benzinării": "fuel", "Instituții Publice": "townhall", "Piețe": "marketplace",
-            "Autogări": "bus_station", "Gări de Tren": "train_station"
+            "Restaurante": "restaurant", 
+            "Farmacii": "pharmacy", 
+            "Magazine": "supermarket",
+            "Benzinării": "fuel", 
+            "Instituții Publice": "primaria", 
+            "Piețe": "marketplace",
+            "Autogări": "autogara", 
+            "Gări de Tren": "gara"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
-        // AM REPARAT AICI: Daca nu are program, il consideram deschis (pentru spitale/primarii)
         function isOpenNow(hoursStr) {
             if (!hoursStr || hoursStr === "Nedefinit" || hoursStr.toLowerCase().includes("non-stop") || hoursStr.includes("24/7")) {
                 return true; 
             }
             try {
                 let parts = hoursStr.split('-');
-                if(parts.length !== 2) return true; // Daca formatul e ciudat, il lasam afisat
+                if(parts.length !== 2) return true; 
                 let start = parts[0].trim().split(':');
                 let end = parts[1].trim().split(':');
                 let now = new Date();
@@ -318,7 +323,6 @@ html
             document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale...</div>";
             document.getElementById('search-input').value = "";
             
-            // Resetam filtrul la intrarea in categorie
             showOnlyOpen = false;
             document.getElementById('filter-btn').classList.remove('active');
             document.getElementById('filter-btn').innerText = "🟢 Doar Deschise Acum";
@@ -412,7 +416,6 @@ html
 
                     let openStatus = isOpenNow(openingHours);
                     
-                    // Daca filtrul este activ si locatia e inchisa, o sarim
                     if (showOnlyOpen && !openStatus) return;
                     hasResults = true;
 
