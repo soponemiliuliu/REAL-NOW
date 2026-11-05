@@ -5,50 +5,27 @@ html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real Now</title>
-    <!-- Font modern pentru titlu (Montserrat) -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5eedc; /* Fundal bej cald */
-            color: #333;
-            padding-bottom: 70px; overflow-x: hidden;
+            background-color: #f5eedc; color: #333; padding-bottom: 70px; overflow-x: hidden;
         }
-
-        /* OMULETUL NEGRU */
         .omulet {
             position: fixed; width: 35px; height: 70px;
-            /* Silueta unui omulet negru folosind un SVG */
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 48" fill="black"><circle cx="12" cy="8" r="6"/><path d="M6 16h12v20l-4 10h-4l-4-10V16z"/><path d="M6 18l-4 10h3l3-8V18zM18 18l4 10h-3l-3-8V18z"/></svg>');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 1000; 
+            background-size: contain; background-repeat: no-repeat; z-index: 1000; 
             transition: top 2s linear, left 2s linear, transform 0.5s ease-in-out;
         }
+        .omulet.stop { transform: scale(1.2); }
         
-        /* Cand se opreste, isi face un pic capul mai mare */
-        .omulet.stop {
-            transform: scale(1.2);
-        }
-
         .header { text-align: center; padding: 20px 15px; background: rgba(0,0,0,0.03); border-radius: 0 0 20px 20px; border-bottom: 2px solid #e0d4c3;}
-        
-        /* TITLUL REAL NOW MODIFICAT */
-        .header h1 { 
-            margin: 0; 
-            font-family: 'Montserrat', sans-serif;
-            font-size: 34px; 
-            color: #111111; /* Negru elegant */
-            letter-spacing: 2px; /* Spațiere între litere pentru un aspect premium */
-            text-transform: uppercase;
-        }
+        .header h1 { margin: 0; font-family: 'Montserrat', sans-serif; font-size: 34px; color: #111111; letter-spacing: 2px; text-transform: uppercase; }
         
         .location-bar { background: white; color: #333; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .category-btn { background-color: white; border-radius: 12px; overflow: hidden; color: #333; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
         .category-btn img { width: 100%; height: 60px; object-fit: cover; }
@@ -67,7 +44,6 @@ html
         .sub-header h2 { margin: 0; font-size: 20px; }
         
         .list-container { padding: 15px; }
-        
         .place-item { background: white; padding: 12px; margin-bottom: 10px; border-radius: 10px; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); border-left: 4px solid #1e90ff; }
         .place-info { flex: 1; }
         .place-info h4 { margin: 0 0 5px 0; font-size: 16px; color: #222; }
@@ -105,7 +81,6 @@ html
 </head>
 <body>
 
-    <!-- Omulețul Negru -->
     <div class="omulet" id="omulet"></div>
 
     <div id="page-home" class="page active">
@@ -125,7 +100,7 @@ html
         </div>
         <div class="list-container">
             <div id="map-list"></div>
-            <div id="list-items"><p style="text-align:center;">Se încarcă datele reale...</p></div>
+            <div id="list-items"></div>
         </div>
     </div>
 
@@ -182,11 +157,10 @@ html
         let step = 0;
         
         function moveOmlet() {
-            const w = window.innerWidth - 40; // Latime ecran minus marimea omuletului
-            const h = window.innerHeight - 80; // Inaltime ecran
+            const w = window.innerWidth - 40;
+            const h = window.innerHeight - 80;
             omulet.classList.remove('stop');
             
-            // Il mutam in cele 4 colturi (perimetral)
             if (step === 0) { omulet.style.top = '100px'; omulet.style.left = '10px'; }
             else if (step === 1) { omulet.style.top = '100px'; omulet.style.left = w + 'px'; }
             else if (step === 2) { omulet.style.top = h + 'px'; omulet.style.left = w + 'px'; }
@@ -195,16 +169,12 @@ html
             step = (step + 1) % 4;
         }
         
-        // La fiecare 5 secunde, se opreste
         setInterval(() => { omulet.classList.add('stop'); }, 5000);
-        
-        // Pornim miscarea
         moveOmlet(); 
         setInterval(moveOmlet, 4000);
 
-        // ================= DATE & CONFIGURARE =================
+        // ================= DATE =================
         let currentCityName = "Cluj-Napoca";
-        let currentCategoryName = "";
         let currentPlaceName = "";
 
         const cityCoords = {
@@ -297,36 +267,39 @@ html
             }
         }
 
-        // ================= FUNCTIA CU NOMINATIM =================
+        // ================= DESCHIDERE CATEGORIE & DATE REALE =================
         function openCategory(categoryName, color) {
-            currentCategoryName = categoryName;
+            // 1. Schimbam pagina imediat, ca sa stim ca butonul functioneaza
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
-            
-            document.getElementById('list-items').innerHTML = "<p style='text-align:center;'>Se caută date reale...</p>";
+            document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:#333;'>Se încarcă datele de pe OpenStreetMap...</p>";
             document.getElementById('map-list').style.display = 'block';
-            
             showPage('page-list');
-            
+
+            // 2. Pregatim harta
             let [lat, lng] = getCityCoords(currentCityName);
+            if (!mapList) {
+                mapList = L.map('map-list').setView([lat, lng], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
+            } else {
+                mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
+                mapList.setView([lat, lng], 12);
+            }
+
+            // 3. Facem cererea catre server
             let term = categorySearchTerms[categoryName];
             let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+in+${currentCityName}&limit=20`;
 
-            fetch(url, { headers: { 'Accept-Language': 'ro' } })
-                .then(response => response.json())
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("Eroare server");
+                    return response.json();
+                })
                 .then(data => {
                     let html = "";
                     if (data.length === 0) {
-                        html = "<p style='text-align:center;'>Nu s-au găsit date.</p>";
+                        html = "<p style='text-align:center; color:#333;'>Momentan nu s-au găsit date pentru această zonă.</p>";
                     } else {
-                        if (!mapList) {
-                            mapList = L.map('map-list').setView([lat, lng], 12);
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
-                        } else {
-                            mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
-                            mapList.setView([lat, lng], 12);
-                        }
-
                         data.forEach(place => {
                             let name = place.name || place.display_name.split(',')[0];
                             let elLat = place.lat;
@@ -347,7 +320,7 @@ html
                     document.getElementById('list-items').innerHTML = html;
                 })
                 .catch(err => {
-                    document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:red;'>Eroare de rețea. Verifică conexiunea la internet.</p>";
+                    document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:red;'>Nu s-a putut face conexiunea cu serverul de hărți. Verifică internetul.</p>";
                 });
         }
 
@@ -355,6 +328,7 @@ html
             showPage('page-list');
         }
 
+        // ================= CHAT =================
         function openChat(placeName) {
             currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
@@ -367,7 +341,6 @@ html
             showPage('page-chat');
         }
 
-        // ================= LOGICA DE CHAT =================
         function toggleEmoji() {
             let picker = document.getElementById('emoji-picker');
             picker.style.display = (picker.style.display === 'block') ? 'none' : 'block';
@@ -403,7 +376,7 @@ html
             }
         }
 
-        // ================= LOGICA DE RECENZII =================
+        // ================= RECENZII =================
         let currentRating = 0;
 
         function setStars(val) {
