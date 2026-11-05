@@ -15,16 +15,16 @@ html
             color: white; padding-bottom: 70px; overflow-x: hidden;
         }
 
-        /* Jderul */
+        /* Jderul - Am pus o poză mai sigură */
         .jder {
-            position: fixed; width: 70px; height: 70px;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Pine_Marten.jpg/240px-Pine_Marten.jpg'); 
-            background-size: cover; border-radius: 50%; border: 3px solid white;
+            position: fixed; width: 80px; height: 80px;
+            background-image: url('https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=150&q=80'); 
+            background-size: cover; background-position: center;
+            border-radius: 50%; border: 3px solid white;
             box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 1000; transition: all 2s ease-in-out;
         }
-        .jder.stop { transform: scale(1.2); border-color: #ffcc00; }
+        .jder.stop { transform: scale(1.3); border-color: #ffcc00; }
 
-        /* Meniul Principal */
         .page { display: none; }
         .page.active { display: block; }
 
@@ -33,18 +33,21 @@ html
         
         .location-bar { background: white; color: black; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; }
 
+        /* Toate cele 9 categorii */
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .category-btn { background-color: #333; border-radius: 12px; overflow: hidden; color: white; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%;}
-        .category-btn img { width: 100%; height: 65px; object-fit: cover; }
-        .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 13px; }
+        .category-btn img { width: 100%; height: 60px; object-fit: cover; }
+        .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 12px; }
         
         .bg-blue { background-color: #1e90ff; } .bg-green { background-color: #32cd32; }
         .bg-purple { background-color: #8a2be2; } .bg-red { background-color: #dc143c; }
         .bg-orange { background-color: #ff8c00; } .bg-teal { background-color: #008080; }
+        .bg-brown { background-color: #8b4513; }
 
-        #map { height: 200px; width: 95%; margin: 10px auto; border-radius: 12px; border: 3px solid white; }
+        /* Harta e jos, dupa categorii */
+        #map { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; }
 
-        /* Pagini Secundare (Subcategorii) */
+        /* Pagini Secundare */
         .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; }
         .sub-header button { background: none; border: none; color: white; font-size: 24px; margin-right: 15px; cursor: pointer; }
         .sub-header h2 { margin: 0; font-size: 20px; }
@@ -54,9 +57,9 @@ html
         .subcategory img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
         .subcategory span { font-weight: bold; }
 
-        /* Pagina Chat */
-        .chat-box { padding: 15px; height: 60vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
-        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; }
+        /* Chat */
+        .chat-box { padding: 15px; height: 50vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
+        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
         .chat-input { display: flex; padding: 0 15px; }
         .chat-input input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
@@ -68,7 +71,6 @@ html
 </head>
 <body>
 
-    <!-- Jderul -->
     <div class="jder" id="jder"></div>
 
     <!-- PAGINA 1: Acasa -->
@@ -81,55 +83,64 @@ html
         </div>
 
         <div class="grid-container">
-            <button onclick="openCategory('Cozi', 'bg-blue')" class="category-btn">
-                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=300&q=80">
-                <div class="btn-text bg-blue">👥 Cozi</div>
-            </button>
-            <button onclick="openCategory('Parcări', 'bg-blue')" class="category-btn">
-                <img src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=300&q=80">
-                <div class="btn-text bg-blue">🚗 Parcări</div>
-            </button>
-            <button onclick="openCategory('Restaurante', 'bg-purple')" class="category-btn">
+            <button onclick="openCategory('Restaurante', '#8a2be2')" class="category-btn">
                 <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80">
                 <div class="btn-text bg-purple">🍽️ Restaurante</div>
             </button>
-            <button onclick="openCategory('Farmacii', 'bg-green')" class="category-btn">
+            <button onclick="openCategory('Farmacii', '#32cd32')" class="category-btn">
                 <img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=300&q=80">
                 <div class="btn-text bg-green">💊 Farmacii</div>
             </button>
-            <button onclick="openCategory('Magazine', 'bg-red')" class="category-btn">
+            <button onclick="openCategory('Magazine', '#dc143c')" class="category-btn">
                 <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=300&q=80">
                 <div class="btn-text bg-red">🛍️ Magazine</div>
             </button>
-            <button onclick="openCategory('Benzinării', 'bg-green')" class="category-btn">
+            <button onclick="openCategory('Benzinării', '#008080')" class="category-btn">
                 <img src="https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80">
-                <div class="btn-text bg-green">⛽ Benzinării</div>
+                <div class="btn-text bg-teal">⛽ Benzinării</div>
+            </button>
+            <button onclick="openCategory('Magazine Alimentare', '#ff8c00')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-orange">🛒 Alimentare</div>
+            </button>
+            <button onclick="openCategory('Instituții Publice', '#1e90ff')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1577412647305-991150c7d163?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-blue">🏛️ Instituții</div>
+            </button>
+            <button onclick="openCategory('Piețe', '#ff8c00')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-orange">🍅 Piețe</div>
+            </button>
+            <button onclick="openCategory('Autogări', '#8b4513')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-brown">🚌 Autogări</div>
+            </button>
+            <button onclick="openCategory('Gări de Tren', '#8b4513')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-brown">🚂 Gări</div>
             </button>
         </div>
 
+        <!-- Harta este pusa la sfarsit, dupa categorii -->
         <div id="map"></div>
     </div>
 
-    <!-- PAGINA 2: Subcategorii (Ascunsa initial) -->
+    <!-- PAGINA 2: Subcategorii -->
     <div id="page-sub" class="page">
-        <div class="sub-header">
+        <div class="sub-header" id="sub-header">
             <button onclick="goHome()">⬅</button>
             <h2 id="sub-title">Categorie</h2>
         </div>
-        <div class="list-container" id="sub-list">
-            <!-- Se umple din JavaScript -->
-        </div>
+        <div class="list-container" id="sub-list"></div>
     </div>
 
-    <!-- PAGINA 3: Chat (Ascunsa initial) -->
+    <!-- PAGINA 3: Chat -->
     <div id="page-chat" class="page">
         <div class="sub-header" style="background: #1e90ff;">
             <button onclick="goBackToSub()">⬅</button>
             <h2 id="chat-title">Chat</h2>
         </div>
-        <div class="chat-box" id="chat-box">
-            <div class="chat-msg">Salut! Bine ai venit în chat-ul Real Now. Aici poți discuta cu oamenii.</div>
-        </div>
+        <div class="chat-box" id="chat-box"></div>
         <div class="chat-input">
             <input type="text" id="msg-input" placeholder="Scrie un mesaj...">
             <button onclick="sendMsg()">Trimite</button>
@@ -137,22 +148,22 @@ html
     </div>
 
     <!-- Meniu Jos -->
-    <div class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav">
         <div onclick="goHome()">🏠<br>Acasă</div>
-        <div>⭐<br>Preferate</div>
-        <div>🔔<br>Notificări</div>
-        <div>🌐<br>Limbă</div>
+        <div onclick="alert('Aceasta functie va fi disponibila in curand!')">⭐<br>Preferate</div>
+        <div onclick="alert('Aceasta functie va fi disponibila in curand!')">🔔<br>Notificări</div>
+        <div onclick="alert('Aici va aparea lista cu limbi straine (Romana, Engleza, Maghiara etc.)')">🌐<br>Limbă</div>
     </div>
 
     <script>
-        // ================= LOGICA JDERULUI =================
+        // ================= JDERUL =================
         const jder = document.getElementById('jder');
         let step = 0;
         function moveJder() {
-            const w = window.innerWidth - 80, h = window.innerHeight - 80;
+            const w = window.innerWidth - 90, h = window.innerHeight - 90;
             jder.classList.remove('stop');
-            if (step === 0) { jder.style.top = '80px'; jder.style.left = '10px'; }
-            else if (step === 1) { jder.style.top = '80px'; jder.style.left = w + 'px'; }
+            if (step === 0) { jder.style.top = '100px'; jder.style.left = '10px'; }
+            else if (step === 1) { jder.style.top = '100px'; jder.style.left = w + 'px'; }
             else if (step === 2) { jder.style.top = h + 'px'; jder.style.left = w + 'px'; }
             else if (step === 3) { jder.style.top = h + 'px'; jder.style.left = '10px'; }
             step = (step + 1) % 4;
@@ -160,7 +171,7 @@ html
         setInterval(() => { jder.classList.add('stop'); }, 5000);
         moveJder(); setInterval(moveJder, 4000);
 
-        // ================= LOGICA LOCATIEI & HARTII =================
+        // ================= HARTA & LOCATIE =================
         function getLocation() {
             document.getElementById('loc-text').innerText = "⏳ Se caută...";
             if (navigator.geolocation) {
@@ -179,12 +190,9 @@ html
 
         var map = L.map('map').setView([46.7712, 23.6236], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.marker([46.7712, 23.6236]).addTo(map)
-            .bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00");
+        L.marker([46.7712, 23.6236]).addTo(map).bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00");
 
-        // ================= LOGICA PAGINILOR =================
-        let currentCategory = "";
-
+        // ================= NAVIGARE PAGINI =================
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
@@ -193,13 +201,11 @@ html
 
         function goHome() { showPage('page-home'); }
 
-        function openCategory(categoryName, colorClass) {
-            currentCategory = categoryName;
+        function openCategory(categoryName, color) {
             document.getElementById('sub-title').innerText = categoryName;
-            document.getElementById('sub-header').style.backgroundColor = colorClass; // Schimba culoarea header-ului
+            document.getElementById('sub-header').style.backgroundColor = color;
 
-            // Generam lista de subcategorii
-            let subList = document.getElementById('sub-list');
+            // Generam subcategoriile (diferite pentru fiecare categorie)
             let html = `
                 <div class="subcategory" onclick="openChat('${categoryName} - Toate')">
                     <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80">
@@ -207,14 +213,14 @@ html
                 </div>
                 <div class="subcategory" onclick="openChat('${categoryName} - Cluj')">
                     <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=100&q=80">
-                    <span>${categoryName} din Cluj</span>
+                    <span>${categoryName} în Cluj</span>
                 </div>
-                <div class="subcategory" onclick="openChat('${categoryName} - Alte Orase')">
+                <div class="subcategory" onclick="openChat('${categoryName} - Alte Orașe')">
                     <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=100&q=80">
                     <span>${categoryName} alte orașe</span>
                 </div>
             `;
-            subList.innerHTML = html;
+            document.getElementById('sub-list').innerHTML = html;
             showPage('page-sub');
         }
 
@@ -222,7 +228,7 @@ html
             showPage('page-sub');
         }
 
-        // ================= LOGICA CHAT-ULUI =================
+        // ================= CHAT =================
         function openChat(chatName) {
             document.getElementById('chat-title').innerText = chatName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Salut! Bine ai venit în chat-ul pentru <b>${chatName}</b>.</div>`;
@@ -236,13 +242,12 @@ html
                 box.innerHTML += `<div class="chat-msg me">${input.value}</div>`;
                 input.value = "";
                 box.scrollTop = box.scrollHeight;
-                // Simulam un raspuns automat
                 setTimeout(() => {
-                    box.innerHTML += `<div class="chat-msg">Mesajul tău a fost trimis către comunitate!</div>`;
+                    box.innerHTML += `<div class="chat-msg">Mesajul tău a fost trimis!</div>`;
                     box.scrollTop = box.scrollHeight;
                 }, 1000);
             }
         }
     </script>
 </body>
-</html>
+</html
