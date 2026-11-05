@@ -217,16 +217,16 @@ html
             "Constanța": [44.1598, 28.6348], "Craiova": [44.3302, 23.7949]
         };
 
-        // AICI AM PUS CĂUTAREA DIRECT PE HARTĂ (OVERPASS) PENTRU A GĂSI TOT
-        const categoryTags = {
-            "Restaurante": '["amenity"="restaurant"]',
-            "Farmacii": '["amenity"="pharmacy"]',
-            "Magazine": '["shop"="supermarket"]',
-            "Benzinării": '["amenity"="fuel"]',
-            "Instituții Publice": '["amenity"~"townhall|hospital|police|post_office"]',
-            "Piețe": '["amenity"="marketplace"]',
-            "Autogări": '["amenity"="bus_station"]',
-            "Gări de Tren": '["railway"="station"]'
+        // Am modificat termenii de cautare pentru a fi mai usor de gasit de catre server
+        const categorySearchTerms = {
+            "Restaurante": "restaurant", 
+            "Farmacii": "farmacie", 
+            "Magazine": "magazin",
+            "Benzinării": "benzinarie", 
+            "Instituții Publice": "primarie", 
+            "Piețe": "piata",
+            "Autogări": "autogara", 
+            "Gări de Tren": "gara"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -315,13 +315,12 @@ html
         }
         window.addEventListener('hashchange', checkPage);
 
-        // ================= CĂUTARE DIRECT PE HARTĂ (OVERPASS) =================
         function openCategory(categoryName, color) {
             currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
             document.getElementById('map-list').style.display = 'block';
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută pe hartă...</div>";
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută datele...</div>";
             document.getElementById('search-input').value = "";
             
             showOnlyOpen = false;
@@ -337,34 +336,14 @@ html
                 mapList.setView([lat, lng], 12);
             }
 
-            let tag = categoryTags[categoryName];
-            // Caută într-o rază de 10km în jurul centrului orașului
-            let query = `[out:json][timeout:25];(node${tag}(around:10000,${lat},${lng});way${tag}(around:10000,${lat},${lng}););out center 50;`;
-            let url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+            let term = categorySearchTerms[categoryName];
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+${currentCityName}&limit=30&extratags=1`;
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    let elements = data.elements;
-                    currentDataList = []; // Resetăm lista
-
-                    elements.forEach(el => {
-                        let name = el.tags.name || "Fără nume";
-                        let opening = el.tags.opening_hours || "Nedefinit";
-                        let elLat = el.lat || (el.center && el.center.lat);
-                        let elLng = el.lon || (el.center && el.center.lon);
-
-                        if(elLat && elLng) {
-                            currentDataList.push({
-                                name: name,
-                                opening_hours: opening,
-                                lat: elLat,
-                                lon: elLng,
-                                display_name: name // Fallback
-                            });
-                        }
-                    });
-                    displayResults(currentDataList);
+                    currentDataList = data;
+                    displayResults(data);
                 })
                 .catch(err => {
                     document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
@@ -430,12 +409,9 @@ html
                     let elLat = place.lat;
                     let elLng = place.lon;
                     
-                    // Extragem orarul în funcție de structura datelor
                     let openingHours = "Nedefinit";
                     if (place.extratags && place.extratags.opening_hours) {
                         openingHours = place.extratags.opening_hours;
-                    } else if (place.opening_hours) {
-                        openingHours = place.opening_hours;
                     }
 
                     let openStatus = isOpenNow(openingHours);
@@ -461,7 +437,7 @@ html
                         <div class="place-item">
                             <div class="place-info">
                                 <h4><span class="status-dot ${statusColor}"></span> ${name}</h4>
-                                <p>📍 ${place.display_name && place.display_name !== name ? place.display_name.split(',').slice(1,3).join(',') : 'Locație pe hartă'}</p>
+                                <p>📍 ${place.display_name.split(',').slice(1,3).join(',')}</p>
                                 <p>🕒 <strong>Program: ${openingHours}</strong></p>
                                 ${queueStatusHtml}
                                 ${queueBtnHtml}
