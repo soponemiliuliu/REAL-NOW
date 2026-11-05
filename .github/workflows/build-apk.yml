@@ -13,8 +13,8 @@ jobs:
       - name: Build APK with Nitron
         run: |
           cd ./web-source
-          npx nitron init
-          npm run build
+          npx nitron init --preset vanilla
+          npx nitron build
       - uses: actions/upload-artifact@v4
         with:
           name: REAL-NOW-APK
