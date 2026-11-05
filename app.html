@@ -102,7 +102,6 @@ html
 
     <div class="omulet" id="omulet"></div>
 
-    <!-- PAGINA 1: Acasă -->
     <div id="page-home" class="page active">
         <div class="header"><h1>Real Now</h1></div>
         <div class="location-bar" onclick="changeCity()">
@@ -113,7 +112,6 @@ html
         <div id="map-main"></div>
     </div>
 
-    <!-- PAGINA 2: Lista -->
     <div id="page-list" class="page" style="display:none;">
         <div class="sub-header" id="list-header">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -134,7 +132,6 @@ html
         </div>
     </div>
 
-    <!-- PAGINA 3: Chat & Recenzii -->
     <div id="page-chat" class="page" style="display:none;">
         <div class="sub-header" style="background: #1e90ff;">
             <button onclick="window.location.hash = 'list'">⬅</button>
@@ -175,7 +172,6 @@ html
         </div>
     </div>
 
-    <!-- PAGINA 4: Preferate -->
     <div id="page-fav" class="page" style="display:none;">
         <div class="sub-header" style="background: #8a2be2;">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -194,7 +190,6 @@ html
     </div>
 
     <script>
-        // ================= OMULETUL =================
         const omulet = document.getElementById('omulet');
         let step = 0;
         function moveOmlet() {
@@ -209,11 +204,10 @@ html
         setInterval(() => { omulet.classList.add('stop'); }, 5000);
         moveOmlet(); setInterval(moveOmlet, 4000);
 
-        // ================= DATE =================
         let currentCityName = "Cluj-Napoca";
         let currentPlaceName = "";
         let currentCategoryName = "";
-        let currentDataList = []; // Salvam lista curenta pentru filtrare
+        let currentDataList = []; 
         let showOnlyOpen = false;
 
         const cityCoords = {
@@ -231,8 +225,6 @@ html
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
-        // ================= FUNCTII UTILE =================
-        // Verifica daca este deschis acum (bazat pe formatul simplu "HH:MM - HH:MM")
         function isOpenNow(hoursStr) {
             if (!hoursStr || hoursStr === "Nedefinit") return false;
             try {
@@ -245,14 +237,13 @@ html
                 let startMinutes = parseInt(start[0]) * 60 + parseInt(start[1]);
                 let endMinutes = parseInt(end[0]) * 60 + parseInt(end[1]);
                 
-                if (endMinutes < startMinutes) { // Program de noapte
+                if (endMinutes < startMinutes) { 
                     return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
                 }
                 return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
             } catch(e) { return false; }
         }
 
-        // ================= INITIALIZARE =================
         function initApp() {
             renderCategories(currentCityName);
             initMaps();
@@ -286,7 +277,6 @@ html
             });
         }
 
-        // ================= HARTI =================
         var mapMain, mapList;
         function initMaps() {
             let [lat, lng] = getCityCoords(currentCityName);
@@ -317,7 +307,6 @@ html
         }
         window.addEventListener('hashchange', checkPage);
 
-        // ================= CONECTARE LA SERVER (DATE REALE) =================
         function openCategory(categoryName, color) {
             currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
@@ -377,22 +366,20 @@ html
                 });
         }
 
-        // ================= FILTRARE DESCHIS ACUM =================
         function toggleFilter() {
             showOnlyOpen = !showOnlyOpen;
             let btn = document.getElementById('filter-btn');
             if(showOnlyOpen) {
                 btn.classList.add('active');
                 btn.innerText = "🟢 Doar Deschise (Activ)";
-                displayResults(currentDataList); // Reafișăm lista filtrată
+                displayResults(currentDataList); 
             } else {
                 btn.classList.remove('active');
                 btn.innerText = "🟢 Doar Deschise Acum";
-                displayResults(currentDataList); // Reafișăm toată lista
+                displayResults(currentDataList); 
             }
         }
 
-        // ================= AFISARE REZULTATE (CU TOATE FUNCTIILE) =================
         function displayResults(data, isSearch = false) {
             let html = "";
             if (data.length === 0) {
@@ -418,7 +405,6 @@ html
 
                     let openStatus = isOpenNow(openingHours);
                     
-                    // Filtrare
                     if (showOnlyOpen && !openStatus) return;
                     hasResults = true;
 
@@ -426,7 +412,6 @@ html
                     let favIcon = isFav ? "❤️" : "🤍";
                     let statusColor = openStatus ? "status-open" : "status-closed";
                     
-                    // Buton Raportare Coada (doar la Institutii)
                     let queueBtnHtml = "";
                     let queueStatusHtml = "";
                     if(currentCategoryName === "Instituții Publice") {
@@ -467,16 +452,15 @@ html
             document.getElementById('list-items').innerHTML = html;
         }
 
-        // ================= FUNCTII PREFERATE & COZI =================
         function toggleFavorite(placeName, btnElement) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             let index = favorites.indexOf(placeName);
             
             if (index > -1) {
-                favorites.splice(index, 1); // Stergem
+                favorites.splice(index, 1); 
                 btnElement.innerText = "🤍";
             } else {
-                favorites.push(placeName); // Adaugam
+                favorites.push(placeName); 
                 btnElement.innerText = "❤️";
             }
             localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -502,3 +486,102 @@ html
                         <div class="action-btns">
                             <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
                         </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function reportQueue(placeName) {
+            let queueReports = JSON.parse(localStorage.getItem('queue_reports')) || {};
+            queueReports[placeName] = (queueReports[placeName] || 0) + 1;
+            localStorage.setItem('queue_reports', JSON.stringify(queueReports));
+            alert("Mulțumim! Ai raportat coada la " + placeName);
+            displayResults(currentDataList); 
+        }
+
+        function openChat(placeName) {
+            window.location.hash = 'chat';
+            currentPlaceName = placeName;
+            document.getElementById('chat-title').innerText = "Chat: " + placeName;
+            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
+            document.getElementById('review-text').value = "";
+            setStars(0);
+            loadReviews(placeName);
+        }
+
+        function toggleEmoji() {
+            let picker = document.getElementById('emoji-picker');
+            picker.style.display = (picker.style.display === 'block') ? 'none' : 'block';
+        }
+        function addEmoji(emoji) {
+            let input = document.getElementById('msg-input');
+            input.value += emoji;
+            input.focus();
+            toggleEmoji();
+        }
+        function uploadImage(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let box = document.getElementById('chat-box');
+                    box.innerHTML += `<div class="chat-msg me"><img src="${e.target.result}"></div>`;
+                    box.scrollTop = box.scrollHeight;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function sendMsg() {
+            const input = document.getElementById('msg-input');
+            const box = document.getElementById('chat-box');
+            if (input.value.trim() !== "") {
+                box.innerHTML += `<div class="chat-msg me">${input.value}</div>`;
+                input.value = "";
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        let currentRating = 0;
+        function setStars(val) {
+            currentRating = val;
+            document.querySelectorAll('#star-rating span').forEach(star => {
+                if (parseInt(star.getAttribute('data-val')) <= val) { star.classList.add('active'); } 
+                else { star.classList.remove('active'); }
+            });
+        }
+        document.querySelectorAll('#star-rating span').forEach(star => {
+            star.addEventListener('click', function() { setStars(parseInt(this.getAttribute('data-val'))); });
+        });
+
+        function submitReview() {
+            let text = document.getElementById('review-text').value;
+            if (currentRating === 0 || text.trim() === "") { alert("Te rog acordă o notă și scrie un text."); return; }
+            let reviews = JSON.parse(localStorage.getItem('reviews_' + currentPlaceName)) || [];
+            reviews.push({ rating: currentRating, text: text, date: new Date().toLocaleDateString('ro-RO') });
+            localStorage.setItem('reviews_' + currentPlaceName, JSON.stringify(reviews));
+            document.getElementById('review-text').value = "";
+            setStars(0);
+            loadReviews(currentPlaceName);
+            alert("Recenzia a fost adăugată!");
+        }
+
+        function loadReviews(placeName) {
+            let reviews = JSON.parse(localStorage.getItem('reviews_' + placeName)) || [];
+            let container = document.getElementById('existing-reviews');
+            if (reviews.length === 0) {
+                container.innerHTML = "<p style='font-size:12px; color:#999;'>Nu există recenzii încă.</p>";
+                return;
+            }
+            let html = "";
+            reviews.forEach(r => {
+                let starsDisplay = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+                html += `<div class="review-item"><strong>${starsDisplay}</strong> <span style="float:right; color:#999;">${r.date}</span><br>${r.text}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
