@@ -225,11 +225,14 @@ html
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
+        // AM REPARAT AICI: Daca nu are program, il consideram deschis (pentru spitale/primarii)
         function isOpenNow(hoursStr) {
-            if (!hoursStr || hoursStr === "Nedefinit") return false;
+            if (!hoursStr || hoursStr === "Nedefinit" || hoursStr.toLowerCase().includes("non-stop") || hoursStr.includes("24/7")) {
+                return true; 
+            }
             try {
                 let parts = hoursStr.split('-');
-                if(parts.length !== 2) return false;
+                if(parts.length !== 2) return true; // Daca formatul e ciudat, il lasam afisat
                 let start = parts[0].trim().split(':');
                 let end = parts[1].trim().split(':');
                 let now = new Date();
@@ -241,7 +244,7 @@ html
                     return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
                 }
                 return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-            } catch(e) { return false; }
+            } catch(e) { return true; }
         }
 
         function initApp() {
@@ -314,8 +317,11 @@ html
             document.getElementById('map-list').style.display = 'block';
             document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale...</div>";
             document.getElementById('search-input').value = "";
-            document.getElementById('filter-btn').classList.remove('active');
+            
+            // Resetam filtrul la intrarea in categorie
             showOnlyOpen = false;
+            document.getElementById('filter-btn').classList.remove('active');
+            document.getElementById('filter-btn').innerText = "🟢 Doar Deschise Acum";
 
             let [lat, lng] = getCityCoords(currentCityName);
             if (!mapList) {
@@ -327,7 +333,7 @@ html
             }
 
             let term = categorySearchTerms[categoryName];
-            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+in+${currentCityName}&limit=20&extratags=1`;
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${term}+in+${currentCityName}&limit=30&extratags=1`;
 
             fetch(url)
                 .then(response => response.json())
@@ -346,8 +352,10 @@ html
 
             document.getElementById('list-items').innerHTML = "<div class='loading'>Se caută locația...</div>";
             document.getElementById('list-title').innerText = `Rezultate căutare: "${query}"`;
-            document.getElementById('filter-btn').classList.remove('active');
+            
             showOnlyOpen = false;
+            document.getElementById('filter-btn').classList.remove('active');
+            document.getElementById('filter-btn').innerText = "🟢 Doar Deschise Acum";
 
             let url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}+Romania&limit=10&extratags=1`;
 
@@ -371,13 +379,12 @@ html
             let btn = document.getElementById('filter-btn');
             if(showOnlyOpen) {
                 btn.classList.add('active');
-                btn.innerText = "🟢 Doar Deschise (Activ)";
-                displayResults(currentDataList); 
+                btn.innerText = "🟢 Arată Doar Deschise";
             } else {
                 btn.classList.remove('active');
-                btn.innerText = "🟢 Doar Deschise Acum";
-                displayResults(currentDataList); 
+                btn.innerText = "🟢 Arată Toate";
             }
+            displayResults(currentDataList); 
         }
 
         function displayResults(data, isSearch = false) {
@@ -405,6 +412,7 @@ html
 
                     let openStatus = isOpenNow(openingHours);
                     
+                    // Daca filtrul este activ si locatia e inchisa, o sarim
                     if (showOnlyOpen && !openStatus) return;
                     hasResults = true;
 
