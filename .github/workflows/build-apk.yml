@@ -10,10 +10,20 @@ jobs:
           node-version: '20'
       - name: Extract source
         run: unzip -o REAL_NOW_060_DOWNLOAD.zip -d ./web-source
+      - name: Create Nitron config
+        run: |
+          cd ./web-source
+          echo '{
+            "name": "Real Now",
+            "packageId": "com.realnow.app",
+            "version": "1.0.0",
+            "entry": "index.html",
+            "orientation": "portrait",
+            "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
+          }' > nitron.config.json
       - name: Build APK with Nitron
         run: |
           cd ./web-source
-          npx nitron init --preset vanilla
           npx nitron build
       - uses: actions/upload-artifact@v4
         with:
