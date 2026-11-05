@@ -19,6 +19,7 @@ jobs:
             "version": "1.0.0",
             "entry": "app.html",
             "orientation": "portrait",
+            "icon": "icon.png",
             "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
           }' > nitron.config.json
       - name: Build APK with Nitron
