@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -7,91 +8,144 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
             color: white; padding-bottom: 70px; overflow-x: hidden;
         }
+
+        /* Jderul */
         .jder {
             position: fixed; width: 70px; height: 70px;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Pine_Marten.jpg/240px-Pine_Marten.jpg'); 
-            background-size: cover; border-radius: 50%;
-            border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            z-index: 1000; transition: all 2s ease-in-out;
+            background-size: cover; border-radius: 50%; border: 3px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 1000; transition: all 2s ease-in-out;
         }
         .jder.stop { transform: scale(1.2); border-color: #ffcc00; }
-        .header { text-align: center; padding: 15px 10px; background: rgba(0,0,0,0.4); border-radius: 0 0 20px 20px; }
+
+        /* Meniul Principal */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .header { text-align: center; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 0 0 20px 20px; }
         .header h1 { margin: 0; font-size: 32px; color: #ff3333; text-shadow: 2px 2px 4px #000; }
-        .location-bar {
-            background: white; color: black; margin: 10px auto; padding: 10px;
-            border-radius: 25px; width: 90%; display: flex; justify-content: space-between;
-            font-weight: bold; cursor: pointer;
-        }
+        
+        .location-bar { background: white; color: black; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; }
+
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
-        .category-btn {
-            background-color: #333; border-radius: 12px; overflow: hidden;
-            text-decoration: none; color: white; display: flex; flex-direction: column;
-        }
+        .category-btn { background-color: #333; border-radius: 12px; overflow: hidden; color: white; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%;}
         .category-btn img { width: 100%; height: 65px; object-fit: cover; }
         .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 13px; }
+        
         .bg-blue { background-color: #1e90ff; } .bg-green { background-color: #32cd32; }
         .bg-purple { background-color: #8a2be2; } .bg-red { background-color: #dc143c; }
         .bg-orange { background-color: #ff8c00; } .bg-teal { background-color: #008080; }
-        .bg-brown { background-color: #8b4513; }
-        #map { height: 180px; width: 90%; margin: 10px auto; border-radius: 12px; border: 3px solid white; }
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: white;
-            display: flex; justify-content: space-around; padding: 8px 0;
-            border-radius: 20px 20px 0 0; z-index: 999; color: black;
-        }
-        .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; }
+
+        #map { height: 200px; width: 95%; margin: 10px auto; border-radius: 12px; border: 3px solid white; }
+
+        /* Pagini Secundare (Subcategorii) */
+        .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; }
+        .sub-header button { background: none; border: none; color: white; font-size: 24px; margin-right: 15px; cursor: pointer; }
+        .sub-header h2 { margin: 0; font-size: 20px; }
+        
+        .list-container { padding: 15px; }
+        .subcategory { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; cursor: pointer; color: #333; }
+        .subcategory img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
+        .subcategory span { font-weight: bold; }
+
+        /* Pagina Chat */
+        .chat-box { padding: 15px; height: 60vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
+        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; }
+        .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
+        .chat-input { display: flex; padding: 0 15px; }
+        .chat-input input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
+        .chat-input button { padding: 10px 20px; background: #32cd32; color: white; border: none; border-radius: 20px; margin-left: 10px; font-weight: bold; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: black; }
+        .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
+
+    <!-- Jderul -->
     <div class="jder" id="jder"></div>
-    <div class="header"><h1>REAL NOW</h1></div>
 
-    <div class="location-bar" onclick="getLocation()">
-        <div id="loc-text">✅ Locație necunoscută</div>
-        <div><span>📍 Schimbă</span></div>
+    <!-- PAGINA 1: Acasa -->
+    <div id="page-home" class="page active">
+        <div class="header"><h1>REAL NOW</h1></div>
+
+        <div class="location-bar" onclick="getLocation()">
+            <div id="loc-text">✅ Locație necunoscută</div>
+            <div><span>📍 Schimbă</span></div>
+        </div>
+
+        <div class="grid-container">
+            <button onclick="openCategory('Cozi', 'bg-blue')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-blue">👥 Cozi</div>
+            </button>
+            <button onclick="openCategory('Parcări', 'bg-blue')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-blue">🚗 Parcări</div>
+            </button>
+            <button onclick="openCategory('Restaurante', 'bg-purple')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-purple">🍽️ Restaurante</div>
+            </button>
+            <button onclick="openCategory('Farmacii', 'bg-green')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-green">💊 Farmacii</div>
+            </button>
+            <button onclick="openCategory('Magazine', 'bg-red')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-red">🛍️ Magazine</div>
+            </button>
+            <button onclick="openCategory('Benzinării', 'bg-green')" class="category-btn">
+                <img src="https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80">
+                <div class="btn-text bg-green">⛽ Benzinării</div>
+            </button>
+        </div>
+
+        <div id="map"></div>
     </div>
 
-    <div class="grid-container">
-        <a href="cozi.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-blue">👥 Cozi</div>
-        </a>
-        <a href="restaurante.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-purple">🍽️ Restaurante</div>
-        </a>
-        <a href="farmacii.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-green">💊 Farmacii</div>
-        </a>
-        <a href="magazine.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-red">🛍️ Magazine</div>
-        </a>
-        <a href="benzina.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-green">⛽ Benzinării</div>
-        </a>
-        <a href="piete.html" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80">
-            <div class="btn-text bg-orange">🍅 Piețe</div>
-        </a>
+    <!-- PAGINA 2: Subcategorii (Ascunsa initial) -->
+    <div id="page-sub" class="page">
+        <div class="sub-header">
+            <button onclick="goHome()">⬅</button>
+            <h2 id="sub-title">Categorie</h2>
+        </div>
+        <div class="list-container" id="sub-list">
+            <!-- Se umple din JavaScript -->
+        </div>
     </div>
 
-    <div id="map"></div>
+    <!-- PAGINA 3: Chat (Ascunsa initial) -->
+    <div id="page-chat" class="page">
+        <div class="sub-header" style="background: #1e90ff;">
+            <button onclick="goBackToSub()">⬅</button>
+            <h2 id="chat-title">Chat</h2>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <div class="chat-msg">Salut! Bine ai venit în chat-ul Real Now. Aici poți discuta cu oamenii.</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="msg-input" placeholder="Scrie un mesaj...">
+            <button onclick="sendMsg()">Trimite</button>
+        </div>
+    </div>
 
-    <div class="bottom-nav">
-        <div>🏠<br>Acasă</div><div>⭐<br>Preferate</div><div>🔔<br>Notificări</div><div>🌐<br>Limbă</div>
+    <!-- Meniu Jos -->
+    <div class="bottom-nav" id="bottom-nav">
+        <div onclick="goHome()">🏠<br>Acasă</div>
+        <div>⭐<br>Preferate</div>
+        <div>🔔<br>Notificări</div>
+        <div>🌐<br>Limbă</div>
     </div>
 
     <script>
-        // Jder
+        // ================= LOGICA JDERULUI =================
         const jder = document.getElementById('jder');
         let step = 0;
         function moveJder() {
@@ -106,7 +160,7 @@
         setInterval(() => { jder.classList.add('stop'); }, 5000);
         moveJder(); setInterval(moveJder, 4000);
 
-        // Locatie
+        // ================= LOGICA LOCATIEI & HARTII =================
         function getLocation() {
             document.getElementById('loc-text').innerText = "⏳ Se caută...";
             if (navigator.geolocation) {
@@ -123,11 +177,72 @@
             }
         }
 
-        // Harta
         var map = L.map('map').setView([46.7712, 23.6236], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.marker([46.7712, 23.6236]).addTo(map)
-            .bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00<br><br><a href='restaurante.html' style='color:blue;'>Vezi detalii</a>");
+            .bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00");
+
+        // ================= LOGICA PAGINILOR =================
+        let currentCategory = "";
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function goHome() { showPage('page-home'); }
+
+        function openCategory(categoryName, colorClass) {
+            currentCategory = categoryName;
+            document.getElementById('sub-title').innerText = categoryName;
+            document.getElementById('sub-header').style.backgroundColor = colorClass; // Schimba culoarea header-ului
+
+            // Generam lista de subcategorii
+            let subList = document.getElementById('sub-list');
+            let html = `
+                <div class="subcategory" onclick="openChat('${categoryName} - Toate')">
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80">
+                    <span>Toate ${categoryName}</span>
+                </div>
+                <div class="subcategory" onclick="openChat('${categoryName} - Cluj')">
+                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=100&q=80">
+                    <span>${categoryName} din Cluj</span>
+                </div>
+                <div class="subcategory" onclick="openChat('${categoryName} - Alte Orase')">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=100&q=80">
+                    <span>${categoryName} alte orașe</span>
+                </div>
+            `;
+            subList.innerHTML = html;
+            showPage('page-sub');
+        }
+
+        function goBackToSub() {
+            showPage('page-sub');
+        }
+
+        // ================= LOGICA CHAT-ULUI =================
+        function openChat(chatName) {
+            document.getElementById('chat-title').innerText = chatName;
+            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Salut! Bine ai venit în chat-ul pentru <b>${chatName}</b>.</div>`;
+            showPage('page-chat');
+        }
+
+        function sendMsg() {
+            const input = document.getElementById('msg-input');
+            const box = document.getElementById('chat-box');
+            if (input.value.trim() !== "") {
+                box.innerHTML += `<div class="chat-msg me">${input.value}</div>`;
+                input.value = "";
+                box.scrollTop = box.scrollHeight;
+                // Simulam un raspuns automat
+                setTimeout(() => {
+                    box.innerHTML += `<div class="chat-msg">Mesajul tău a fost trimis către comunitate!</div>`;
+                    box.scrollTop = box.scrollHeight;
+                }, 1000);
+            }
+        }
     </script>
 </body>
 </html>
