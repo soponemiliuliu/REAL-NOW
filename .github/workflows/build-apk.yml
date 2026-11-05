@@ -16,10 +16,10 @@ jobs:
           echo '{
             "name": "Real Now",
             "packageId": "com.realnow.app",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "entry": "app.html",
             "orientation": "portrait",
-            "icon": "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+            "icon": "Screenshot_20261105-114304~2.jpg",
             "permissions": ["INTERNET", "ACCESS_NETWORK_STATE", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
           }' > nitron.config.json
       - name: Build APK with Nitron
