@@ -15,7 +15,6 @@ html
             color: white; padding-bottom: 70px; overflow-x: hidden;
         }
 
-        /* Jderul - Am pus o poză mai sigură */
         .jder {
             position: fixed; width: 80px; height: 80px;
             background-image: url('https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=150&q=80'); 
@@ -33,7 +32,6 @@ html
         
         .location-bar { background: white; color: black; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; }
 
-        /* Toate cele 9 categorii */
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .category-btn { background-color: #333; border-radius: 12px; overflow: hidden; color: white; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%;}
         .category-btn img { width: 100%; height: 60px; object-fit: cover; }
@@ -44,20 +42,29 @@ html
         .bg-orange { background-color: #ff8c00; } .bg-teal { background-color: #008080; }
         .bg-brown { background-color: #8b4513; }
 
-        /* Harta e jos, dupa categorii */
-        #map { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; }
+        #map-main { height: 180px; width: 95%; margin: 15px auto; border-radius: 12px; border: 3px solid white; }
+        
+        /* Harta din pagina 2 */
+        #map-list { height: 200px; width: 100%; border-radius: 12px; margin-bottom: 15px; border: 2px solid white; display: none; }
 
-        /* Pagini Secundare */
-        .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; }
+        .sub-header { background: #333; padding: 15px; display: flex; align-items: center; color: white; position: sticky; top: 0; z-index: 100; }
         .sub-header button { background: none; border: none; color: white; font-size: 24px; margin-right: 15px; cursor: pointer; }
         .sub-header h2 { margin: 0; font-size: 20px; }
         
         .list-container { padding: 15px; }
+        
+        /* Butoanele pentru Cluj / Alte orase */
         .subcategory { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; cursor: pointer; color: #333; }
         .subcategory img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
         .subcategory span { font-weight: bold; }
 
-        /* Chat */
+        /* Lista de magazine/restaurante */
+        .place-item { background: white; padding: 10px; margin-bottom: 10px; border-radius: 10px; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .place-info { flex: 1; }
+        .place-info h4 { margin: 0 0 5px 0; font-size: 16px; }
+        .place-info p { margin: 0; font-size: 12px; color: #666; }
+        .place-btn { background: #1e90ff; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; cursor: pointer; }
+
         .chat-box { padding: 15px; height: 50vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
         .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
@@ -76,7 +83,6 @@ html
     <!-- PAGINA 1: Acasa -->
     <div id="page-home" class="page active">
         <div class="header"><h1>REAL NOW</h1></div>
-
         <div class="location-bar" onclick="getLocation()">
             <div id="loc-text">✅ Locație necunoscută</div>
             <div><span>📍 Schimbă</span></div>
@@ -121,23 +127,25 @@ html
             </button>
         </div>
 
-        <!-- Harta este pusa la sfarsit, dupa categorii -->
-        <div id="map"></div>
+        <div id="map-main"></div>
     </div>
 
-    <!-- PAGINA 2: Subcategorii -->
-    <div id="page-sub" class="page">
-        <div class="sub-header" id="sub-header">
+    <!-- PAGINA 2: Lista (Subcategorii / Locatii / Harta) -->
+    <div id="page-list" class="page">
+        <div class="sub-header" id="list-header">
             <button onclick="goHome()">⬅</button>
-            <h2 id="sub-title">Categorie</h2>
+            <h2 id="list-title">Categorie</h2>
         </div>
-        <div class="list-container" id="sub-list"></div>
+        <div class="list-container">
+            <div id="map-list"></div>
+            <div id="list-items"></div>
+        </div>
     </div>
 
     <!-- PAGINA 3: Chat -->
     <div id="page-chat" class="page">
         <div class="sub-header" style="background: #1e90ff;">
-            <button onclick="goBackToSub()">⬅</button>
+            <button onclick="goBackToList()">⬅</button>
             <h2 id="chat-title">Chat</h2>
         </div>
         <div class="chat-box" id="chat-box"></div>
@@ -147,12 +155,11 @@ html
         </div>
     </div>
 
-    <!-- Meniu Jos -->
     <div class="bottom-nav">
         <div onclick="goHome()">🏠<br>Acasă</div>
-        <div onclick="alert('Aceasta functie va fi disponibila in curand!')">⭐<br>Preferate</div>
-        <div onclick="alert('Aceasta functie va fi disponibila in curand!')">🔔<br>Notificări</div>
-        <div onclick="alert('Aici va aparea lista cu limbi straine (Romana, Engleza, Maghiara etc.)')">🌐<br>Limbă</div>
+        <div onclick="alert('Preferatele vor fi adăugate curând!')">⭐<br>Preferate</div>
+        <div onclick="alert('Notificările vor fi adăugate curând!')">🔔<br>Notificări</div>
+        <div onclick="alert('Aici va apărea lista cu limbi străine!')">🌐<br>Limbă</div>
     </div>
 
     <script>
@@ -171,28 +178,66 @@ html
         setInterval(() => { jder.classList.add('stop'); }, 5000);
         moveJder(); setInterval(moveJder, 4000);
 
-        // ================= HARTA & LOCATIE =================
+        // ================= HARTI & LOCATIE =================
         function getLocation() {
             document.getElementById('loc-text').innerText = "⏳ Se caută...";
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (pos) => {
                         document.getElementById('loc-text').innerText = "✅ Locație găsită!";
-                        map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+                        mapMain.setView([pos.coords.latitude, pos.coords.longitude], 14);
                     },
                     (err) => {
                         document.getElementById('loc-text').innerText = "❌ Locație blocată";
-                        alert("Te rog permite accesul la locație (GPS) din setările telefonului!");
+                        alert("Te rog permite accesul la locație!");
                     }
                 );
             }
         }
 
-        var map = L.map('map').setView([46.7712, 23.6236], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        L.marker([46.7712, 23.6236]).addTo(map).bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00");
+        var mapMain = L.map('map-main').setView([46.7712, 23.6236], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMain);
 
-        // ================= NAVIGARE PAGINI =================
+        var mapList;
+        function initMapList() {
+            if (!mapList) {
+                mapList = L.map('map-list').setView([46.7712, 23.6236], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
+            } else {
+                mapList.invalidateSize();
+            }
+        }
+
+        // ================= DATE (Lista de locatii) =================
+        // Aici vom pune datele. Deocamdata sunt de test.
+        const data = {
+            "Magazine": {
+                "Cluj": [
+                    { name: "Kaufland Cluj", program: "08:00 - 22:00", lat: 46.771, lng: 23.623 },
+                    { name: "Carrefour Cluj", program: "08:00 - 22:00", lat: 46.775, lng: 23.630 },
+                    { name: "Lidl Cluj", program: "07:00 - 21:00", lat: 46.768, lng: 23.615 },
+                    { name: "Profi Cluj", program: "07:00 - 23:00", lat: 46.780, lng: 23.620 }
+                ],
+                "Alte Orase": [
+                    { name: "Kaufland Turda", program: "08:00 - 21:00", lat: 46.566, lng: 23.783 },
+                    { name: "Carrefour Turda", program: "08:00 - 22:00", lat: 46.570, lng: 23.780 }
+                ]
+            },
+            "Restaurante": {
+                "Cluj": [
+                    { name: "Restaurant Baracca", program: "12:00 - 23:00", lat: 46.771, lng: 23.623 },
+                    { name: "Roata", program: "11:00 - 22:00", lat: 46.773, lng: 23.618 }
+                ],
+                "Alte Orase": [
+                    { name: "Restaurant Turda", program: "10:00 - 22:00", lat: 46.566, lng: 23.783 }
+                ]
+            }
+        };
+
+        // ================= NAVIGARE =================
+        let currentCategory = "";
+        let currentSub = "";
+
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
@@ -202,36 +247,70 @@ html
         function goHome() { showPage('page-home'); }
 
         function openCategory(categoryName, color) {
-            document.getElementById('sub-title').innerText = categoryName;
-            document.getElementById('sub-header').style.backgroundColor = color;
+            currentCategory = categoryName;
+            document.getElementById('list-title').innerText = categoryName;
+            document.getElementById('list-header').style.backgroundColor = color;
+            
+            // Ascundem harta
+            document.getElementById('map-list').style.display = 'none';
 
-            // Generam subcategoriile (diferite pentru fiecare categorie)
+            // Aratam cele 2 optiuni (Cluj si Alte Orase)
             let html = `
-                <div class="subcategory" onclick="openChat('${categoryName} - Toate')">
-                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=100&q=80">
-                    <span>Toate ${categoryName}</span>
-                </div>
-                <div class="subcategory" onclick="openChat('${categoryName} - Cluj')">
+                <div class="subcategory" onclick="showPlaces('${categoryName}', 'Cluj')">
                     <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=100&q=80">
                     <span>${categoryName} în Cluj</span>
                 </div>
-                <div class="subcategory" onclick="openChat('${categoryName} - Alte Orașe')">
+                <div class="subcategory" onclick="showPlaces('${categoryName}', 'Alte Orase')">
                     <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=100&q=80">
                     <span>${categoryName} alte orașe</span>
                 </div>
             `;
-            document.getElementById('sub-list').innerHTML = html;
-            showPage('page-sub');
+            document.getElementById('list-items').innerHTML = html;
+            showPage('page-list');
         }
 
-        function goBackToSub() {
-            showPage('page-sub');
+        // Functia care afiseaza lista de magazine si harta
+        function showPlaces(cat, sub) {
+            currentSub = sub;
+            document.getElementById('list-title').innerText = `${cat} - ${sub}`;
+            
+            // Aratam harta
+            document.getElementById('map-list').style.display = 'block';
+            initMapList();
+
+            // Luam datele (daca nu exista, punem ceva de test)
+            let places = data[cat] ? data[cat][sub] : [];
+
+            let html = "";
+            if (places.length === 0) {
+                html = "<p style='color:white; text-align:center;'>Nu sunt date momentan pentru aceasta categorie.</p>";
+            } else {
+                places.forEach((place, index) => {
+                    html += `
+                        <div class="place-item">
+                            <div class="place-info">
+                                <h4>${place.name}</h4>
+                                <p>🕒 Program: ${place.program}</p>
+                            </div>
+                            <button class="place-btn" onclick="openChat('${place.name}')">Chat</button>
+                        </div>
+                    `;
+                    // Adaugam pin pe harta
+                    L.marker([place.lat, place.lng]).addTo(mapList).bindPopup(`<b>${place.name}</b><br>${place.program}`);
+                });
+            }
+            document.getElementById('list-items').innerHTML = html;
+            showPage('page-list');
+        }
+
+        function goBackToList() {
+            showPlaces(currentCategory, currentSub);
         }
 
         // ================= CHAT =================
-        function openChat(chatName) {
-            document.getElementById('chat-title').innerText = chatName;
-            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Salut! Bine ai venit în chat-ul pentru <b>${chatName}</b>.</div>`;
+        function openChat(placeName) {
+            document.getElementById('chat-title').innerText = "Chat: " + placeName;
+            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bine ai venit în chat-ul pentru <b>${placeName}</b>! Aici poți discuta cu oamenii.</div>`;
             showPage('page-chat');
         }
 
@@ -243,11 +322,11 @@ html
                 input.value = "";
                 box.scrollTop = box.scrollHeight;
                 setTimeout(() => {
-                    box.innerHTML += `<div class="chat-msg">Mesajul tău a fost trimis!</div>`;
+                    box.innerHTML += `<div class="chat-msg">(Răspuns automat) Mesajul tău a fost înregistrat!</div>`;
                     box.scrollTop = box.scrollHeight;
                 }, 1000);
             }
         }
     </script>
 </body>
-</html
+</html>
