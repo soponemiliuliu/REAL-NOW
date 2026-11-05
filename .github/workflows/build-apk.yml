@@ -30,4 +30,3 @@ jobs:
           name: REAL-NOW-APK
           path: dist/app.apk
           if-no-files-found: error
-```
