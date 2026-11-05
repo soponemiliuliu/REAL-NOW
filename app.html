@@ -14,6 +14,7 @@ html
             background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
             color: white; padding-bottom: 70px; overflow-x: hidden;
         }
+
         .jder {
             position: fixed; width: 80px; height: 80px;
             background-image: url('https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=150&q=80'); 
@@ -56,7 +57,8 @@ html
         .place-info p { margin: 0; font-size: 12px; color: #666; }
         .place-btn { background: #1e90ff; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; cursor: pointer; }
 
-        .chat-box { padding: 15px; height: 45vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
+        /* Chat & Review Styles */
+        .chat-box { padding: 15px; height: 40vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
         .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; word-wrap: break-word; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
         .chat-msg img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
@@ -71,6 +73,17 @@ html
         .emoji-picker { display: none; padding: 10px; background: white; margin: 0 15px; border-radius: 10px; font-size: 24px; text-align: center; }
         .emoji-picker span { cursor: pointer; margin: 0 5px; }
 
+        /* Review Section */
+        .review-section { margin: 15px; padding: 15px; background: #fff; border-radius: 15px; color: #333; }
+        .review-section h3 { margin-top: 0; font-size: 16px; }
+        .stars { font-size: 24px; color: #ccc; cursor: pointer; }
+        .stars .active { color: #ffcc00; }
+        .review-input { width: 100%; padding: 10px; margin-top: 10px; border-radius: 10px; border: 1px solid #ccc; resize: none; }
+        .review-btn { background: #1e90ff; color: white; border: none; padding: 8px 15px; border-radius: 15px; margin-top: 10px; font-weight: bold; cursor: pointer; }
+        .existing-reviews { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; max-height: 150px; overflow-y: auto; }
+        .review-item { font-size: 13px; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        .review-item strong { color: #1e90ff; }
+
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: black; }
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
     </style>
@@ -82,7 +95,7 @@ html
     <div id="page-home" class="page active">
         <div class="header"><h1>REAL NOW</h1></div>
         <div class="location-bar" onclick="changeCity()">
-            <div id="loc-text">📍 Locație: Se caută...</div>
+            <div id="loc-text">📍 Locație: Cluj-Napoca</div>
             <div><span>Schimbă</span></div>
         </div>
         <div class="grid-container" id="main-categories"></div>
@@ -96,7 +109,7 @@ html
         </div>
         <div class="list-container">
             <div id="map-list"></div>
-            <div id="list-items"></div>
+            <div id="list-items"><p style="text-align:center;">Se încarcă datele reale de pe hartă...</p></div>
         </div>
     </div>
 
@@ -105,6 +118,7 @@ html
             <button onclick="goBackToList()">⬅</button>
             <h2 id="chat-title">Chat</h2>
         </div>
+        
         <div class="chat-box" id="chat-box"></div>
         
         <div class="emoji-picker" id="emoji-picker">
@@ -121,6 +135,24 @@ html
             <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadImage(event)">
             <input type="text" id="msg-input" placeholder="Scrie un mesaj...">
             <button class="btn-send" onclick="sendMsg()">Trimite</button>
+        </div>
+
+        <!-- SECȚIUNEA DE RECENZII -->
+        <div class="review-section">
+            <h3>⭐ Lasă o recenzie</h3>
+            <div class="stars" id="star-rating">
+                <span data-val="1">★</span>
+                <span data-val="2">★</span>
+                <span data-val="3">★</span>
+                <span data-val="4">★</span>
+                <span data-val="5">★</span>
+            </div>
+            <textarea class="review-input" id="review-text" rows="2" placeholder="Scrie părerea ta despre acest loc..."></textarea>
+            <button class="review-btn" onclick="submitReview()">Trimite Recenzia</button>
+            
+            <div class="existing-reviews" id="existing-reviews">
+                <!-- Recenziile salvate vor apărea aici -->
+            </div>
         </div>
     </div>
 
@@ -147,10 +179,11 @@ html
         setInterval(() => { jder.classList.add('stop'); }, 5000);
         moveJder(); setInterval(moveJder, 4000);
 
-        // ================= DATE =================
+        // ================= DATE & CONFIGURARE =================
         let currentCityName = "Cluj-Napoca";
-        
-        // Coordonate reale pentru orasele mari
+        let currentCategoryName = "";
+        let currentPlaceName = "";
+
         const cityCoords = {
             "Cluj-Napoca": [46.7712, 23.6236],
             "București": [44.4268, 26.1025],
@@ -164,35 +197,20 @@ html
             "Galați": [45.4353, 28.0080]
         };
 
+        // Maparea categoriilor din aplicatie catre tag-urile OpenStreetMap
+        const categoryTags = {
+            "Restaurante": '["amenity"="restaurant"]',
+            "Farmacii": '["amenity"="pharmacy"]',
+            "Magazine": '["shop"="supermarket"]',
+            "Benzinării": '["amenity"="fuel"]',
+            "Instituții Publice": '["amenity"="townhall"]',
+            "Piețe": '["amenity"="marketplace"]',
+            "Autogări": '["amenity"="bus_station"]',
+            "Gări de Tren": '["railway"="station"]'
+        };
+
         function getCityCoords(city) {
             return cityCoords[city] || [45.9432, 24.9668]; // Default: centrul Romaniei
-        }
-
-        function generateLocations(city, category) {
-            let locations = [];
-            let [baseLat, baseLng] = getCityCoords(city);
-
-            let names = [];
-            if(category === "Restaurante") names = ["Restaurant", "Pizzerie", "Trattoria", "Bistro", "Steak House", "Crama", "Hanul", "La Bunica", "Cafenea", "Pub"];
-            else if(category === "Farmacii") names = ["Farmacia Catena", "Farmacia Dona", "Farmacia Help Net", "Farmacia Sensiblu", "Farmacia Tei", "Farmacia Central", "Farmacia Verde", "Farmacia Vital", "Farmacia Plus", "Farmacia Nova"];
-            else if(category === "Magazine") names = ["Kaufland", "Lidl", "Carrefour", "Mega Image", "Profi", "Penny", "Auchan", "Supermarket", "Market", "Magazin Mixt"];
-            else if(category === "Instituții Publice") names = ["Primăria", "Poliția", "Spitalul", "Tribunalul", "ANAF", "Poșta", "Consiliul Județean", "Biblioteca", "Liceul", "Spitalul Clinic"];
-            else if(category === "Benzinării") names = ["OMV", "Petrom", "Rompetrol", "Lukoil", "Mol", "SOCAR", "Gazprom"];
-            else if(category === "Piețe") names = ["Piața Centrală", "Piața Mare", "Piața Agroalimentară", "Piața Veche"];
-            else if(category === "Autogări") names = ["Autogara Beta", "Autogara Fany", "Autogara Voiajor", "Autogara Nord"];
-            else if(category === "Gări de Tren") names = ["Gara Centrală", "Gara de Nord", "Gara de Est", "Gara de Vest"];
-            else names = ["Locație", "Punct de interes", "Unitate", "Serviciu", "Centru"];
-
-            for(let i=1; i<=20; i++) {
-                let name = names[(i-1) % names.length] + " " + city.split('-')[0] + " " + (i > names.length ? i : "");
-                locations.push({
-                    name: name.trim(),
-                    program: (i % 4 === 0) ? "24/7" : "08:00 - 22:00",
-                    lat: baseLat + (Math.random() - 0.5) * 0.06,
-                    lng: baseLng + (Math.random() - 0.5) * 0.06
-                });
-            }
-            return locations;
         }
 
         // ================= INITIALIZARE =================
@@ -203,8 +221,6 @@ html
 
         function renderCategories(city) {
             document.getElementById('loc-text').innerText = `📍 Locație: ${city}`;
-            
-            // Mutam harta principala pe orasul selectat
             if (mapMain) {
                 let [lat, lng] = getCityCoords(city);
                 mapMain.setView([lat, lng], 12);
@@ -259,50 +275,76 @@ html
             }
         }
 
-        // ================= LISTE & CHAT =================
-        let currentCategoryName = "";
-
+        // ================= LISTE REALE & CHAT =================
         function openCategory(categoryName, color) {
             currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
-            showPlaces(categoryName);
+            
+            // Aratam un mesaj de incarcare
+            document.getElementById('list-items').innerHTML = "<p style='text-align:center; color:white;'>Se caută locații reale pe OpenStreetMap...</p>";
+            document.getElementById('map-list').style.display = 'block';
+            
+            showPage('page-list');
+            fetchRealPlaces(categoryName);
         }
 
-        function showPlaces(categoryName) {
-            let places = generateLocations(currentCityName, categoryName);
-            let [baseLat, baseLng] = getCityCoords(currentCityName);
+        function fetchRealPlaces(categoryName) {
+            let [lat, lng] = getCityCoords(currentCityName);
+            let tag = categoryTags[categoryName];
+            
+            if (!tag) {
+                document.getElementById('list-items').innerHTML = "<p style='color:white; text-align:center;'>Categoria nu are date momentan.</p>";
+                return;
+            }
 
-            document.getElementById('map-list').style.display = 'block';
-            setTimeout(() => { 
-                if (!mapList) {
-                    mapList = L.map('map-list').setView([baseLat, baseLng], 12);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
-                } else {
-                    mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
-                }
-                
-                mapList.setView([baseLat, baseLng], 12);
-                places.forEach(place => {
-                    L.marker([place.lat, place.lng]).addTo(mapList).bindPopup(`<b>${place.name}</b><br>${place.program}`);
+            // Interogare Overpass API pentru locatii reale in raza de 5km
+            let query = `[out:json][timeout:25];(node${tag}(around:5000,${lat},${lng});way${tag}(around:5000,${lat},${lng}););out center 20;`;
+            let url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query);
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let elements = data.elements;
+                    let html = "";
+                    
+                    if (elements.length === 0) {
+                        html = "<p style='color:white; text-align:center;'>Nu s-au găsit locații în această zonă.</p>";
+                    } else {
+                        // Initializam harta
+                        if (!mapList) {
+                            mapList = L.map('map-list').setView([lat, lng], 12);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
+                        } else {
+                            mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
+                            mapList.setView([lat, lng], 12);
+                        }
+
+                        elements.forEach(el => {
+                            let name = el.tags.name || "Locație fără nume";
+                            let opening = el.tags.opening_hours || "Program nedefinit";
+                            let elLat = el.lat || (el.center && el.center.lat);
+                            let elLng = el.lon || (el.center && el.center.lon);
+
+                            if(elLat && elLng) {
+                                html += `
+                                    <div class="place-item">
+                                        <div class="place-info">
+                                            <h4>${name}</h4>
+                                            <p>🕒 Program: ${opening}</p>
+                                        </div>
+                                        <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
+                                    </div>
+                                `;
+                                L.marker([elLat, elLng]).addTo(mapList).bindPopup(`<b>${name}</b><br>${opening}`);
+                            }
+                        });
+                    }
+                    document.getElementById('list-items').innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('list-items').innerHTML = "<p style='color:white; text-align:center;'>Eroare la conectarea cu serverul de hărți. Verifică internetul.</p>";
                 });
-                mapList.invalidateSize();
-            }, 100);
-
-            let html = "";
-            places.forEach((place) => {
-                html += `
-                    <div class="place-item">
-                        <div class="place-info">
-                            <h4>${place.name}</h4>
-                            <p>🕒 Program: ${place.program}</p>
-                        </div>
-                        <button class="place-btn" onclick="openChat('${place.name}')">Chat</button>
-                    </div>
-                `;
-            });
-            document.getElementById('list-items').innerHTML = html;
-            showPage('page-list');
         }
 
         function goBackToList() {
@@ -310,11 +352,19 @@ html
         }
 
         function openChat(placeName) {
+            currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
+            
+            // Resetam recenziile
+            document.getElementById('review-text').value = "";
+            setStars(0);
+            loadReviews(placeName);
+
             showPage('page-chat');
         }
 
+        // ================= LOGICA DE CHAT =================
         function toggleEmoji() {
             let picker = document.getElementById('emoji-picker');
             picker.style.display = (picker.style.display === 'block') ? 'none' : 'block';
@@ -348,6 +398,71 @@ html
                 input.value = "";
                 box.scrollTop = box.scrollHeight;
             }
+        }
+
+        // ================= LOGICA DE RECENZII =================
+        let currentRating = 0;
+
+        // Seteaza stelele vizual
+        function setStars(val) {
+            currentRating = val;
+            document.querySelectorAll('#star-rating span').forEach(star => {
+                if (parseInt(star.getAttribute('data-val')) <= val) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        // Adaugam evenimente pe stele
+        document.querySelectorAll('#star-rating span').forEach(star => {
+            star.addEventListener('click', function() {
+                setStars(parseInt(this.getAttribute('data-val')));
+            });
+        });
+
+        // Trimite recenzia
+        function submitReview() {
+            let text = document.getElementById('review-text').value;
+            if (currentRating === 0 || text.trim() === "") {
+                alert("Te rog acordă o notă (stele) și scrie un text.");
+                return;
+            }
+
+            // Salvam in localStorage (memoria telefonului)
+            let reviews = JSON.parse(localStorage.getItem('reviews_' + currentPlaceName)) || [];
+            reviews.push({ rating: currentRating, text: text, date: new Date().toLocaleDateString('ro-RO') });
+            localStorage.setItem('reviews_' + currentPlaceName, JSON.stringify(reviews));
+
+            // Resetam si reincarcam
+            document.getElementById('review-text').value = "";
+            setStars(0);
+            loadReviews(currentPlaceName);
+            alert("Recenzia a fost adăugată!");
+        }
+
+        // Incarca recenziile existente
+        function loadReviews(placeName) {
+            let reviews = JSON.parse(localStorage.getItem('reviews_' + placeName)) || [];
+            let container = document.getElementById('existing-reviews');
+            
+            if (reviews.length === 0) {
+                container.innerHTML = "<p style='font-size:12px; color:#999;'>Nu există recenzii încă.</p>";
+                return;
+            }
+
+            let html = "";
+            reviews.forEach(r => {
+                let starsDisplay = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+                html += `
+                    <div class="review-item">
+                        <strong>${starsDisplay}</strong> <span style="float:right; color:#999;">${r.date}</span><br>
+                        ${r.text}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         window.onload = initApp;
