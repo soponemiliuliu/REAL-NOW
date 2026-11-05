@@ -19,7 +19,7 @@ jobs:
             "version": "1.0.0",
             "entry": "app.html",
             "orientation": "portrait",
-            "icon": "icon.png",
+            "icon": "https://cdn-icons-png.flaticon.com/512/684/684908.png",
             "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
           }' > nitron.config.json
       - name: Build APK with Nitron
@@ -30,3 +30,4 @@ jobs:
           name: REAL-NOW-APK
           path: dist/app.apk
           if-no-files-found: error
+```
