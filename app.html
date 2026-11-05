@@ -1,156 +1,56 @@
-html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real Now</title>
-    <!-- Harta Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
-            min-height: 100vh;
-            color: white;
-            padding-bottom: 70px;
-            overflow-x: hidden;
+            color: white; padding-bottom: 70px; overflow-x: hidden;
         }
-
-        /* Jderul Animt Realist */
         .jder {
-            position: fixed;
-            width: 90px;
-            height: 90px;
-            /* Am folosit o poză realistă de pe net pentru test */
+            position: fixed; width: 70px; height: 70px;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Pine_Marten.jpg/240px-Pine_Marten.jpg'); 
-            background-size: cover;
-            background-position: center;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            z-index: 1000;
-            transition: all 2s ease-in-out; /* Miscare fluida */
+            background-size: cover; border-radius: 50%;
+            border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            z-index: 1000; transition: all 2s ease-in-out;
         }
-        
-        /* Cand se opreste si zambeste */
-        .jder.stop {
-            transform: scale(1.2); 
-            border-color: #ffcc00;
-        }
-
-        .header {
-            text-align: center;
-            padding: 20px 10px;
-            background: rgba(0, 0, 0, 0.4);
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-            backdrop-filter: blur(5px);
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 36px;
-            color: #ff3333;
-            text-shadow: 2px 2px 4px #000;
-            font-weight: 900;
-        }
+        .jder.stop { transform: scale(1.2); border-color: #ffcc00; }
+        .header { text-align: center; padding: 15px 10px; background: rgba(0,0,0,0.4); border-radius: 0 0 20px 20px; }
+        .header h1 { margin: 0; font-size: 32px; color: #ff3333; text-shadow: 2px 2px 4px #000; }
         .location-bar {
-            background: white;
-            color: black;
-            margin: 15px auto;
-            padding: 10px 15px;
-            border-radius: 25px;
-            width: 85%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            cursor: pointer;
+            background: white; color: black; margin: 10px auto; padding: 10px;
+            border-radius: 25px; width: 90%; display: flex; justify-content: space-between;
+            font-weight: bold; cursor: pointer;
         }
-        
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            padding: 15px;
-        }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .category-btn {
-            background-color: #333;
-            border-radius: 15px;
-            overflow: hidden;
-            text-decoration: none;
-            color: white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.2s;
-            cursor: pointer;
+            background-color: #333; border-radius: 12px; overflow: hidden;
+            text-decoration: none; color: white; display: flex; flex-direction: column;
         }
-        .category-btn:active { transform: scale(0.95); }
-        .category-btn img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-        }
-        .category-btn .btn-text {
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .bg-blue { background-color: #1e90ff; }
-        .bg-green { background-color: #32cd32; }
-        .bg-purple { background-color: #8a2be2; }
-        .bg-red { background-color: #dc143c; }
-        .bg-orange { background-color: #ff8c00; }
-        .bg-teal { background-color: #008080; }
+        .category-btn img { width: 100%; height: 65px; object-fit: cover; }
+        .category-btn .btn-text { padding: 8px; text-align: center; font-weight: bold; font-size: 13px; }
+        .bg-blue { background-color: #1e90ff; } .bg-green { background-color: #32cd32; }
+        .bg-purple { background-color: #8a2be2; } .bg-red { background-color: #dc143c; }
+        .bg-orange { background-color: #ff8c00; } .bg-teal { background-color: #008080; }
         .bg-brown { background-color: #8b4513; }
-
-        /* Harta */
-        #map {
-            height: 300px;
-            width: 90%;
-            margin: 20px auto;
-            border-radius: 15px;
-            border: 4px solid white;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        }
-
+        #map { height: 180px; width: 90%; margin: 10px auto; border-radius: 12px; border: 3px solid white; }
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-            z-index: 999;
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-around; padding: 8px 0;
+            border-radius: 20px 20px 0 0; z-index: 999; color: black;
         }
-        .bottom-nav div {
-            color: #333;
-            font-size: 12px;
-            text-align: center;
-            font-weight: bold;
-        }
+        .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
-
     <div class="jder" id="jder"></div>
-
-    <div class="header">
-        <h1>REAL NOW</h1>
-        <p>Totul la îndemână ta!</p>
-    </div>
+    <div class="header"><h1>REAL NOW</h1></div>
 
     <div class="location-bar" onclick="getLocation()">
         <div id="loc-text">✅ Locație necunoscută</div>
@@ -158,104 +58,76 @@ html
     </div>
 
     <div class="grid-container">
-        <a onclick="openCategory('Cozi')" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=300&q=80" alt="Cozi">
+        <a href="cozi.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=300&q=80">
             <div class="btn-text bg-blue">👥 Cozi</div>
         </a>
-
-        <a onclick="openCategory('Parcări')" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=300&q=80" alt="Parcări">
-            <div class="btn-text bg-blue">🚗 Parcări</div>
-        </a>
-
-        <a onclick="openCategory('Restaurante')" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80" alt="Restaurante">
+        <a href="restaurante.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80">
             <div class="btn-text bg-purple">🍽️ Restaurante</div>
         </a>
-
-        <a onclick="openCategory('Benzinării')" class="category-btn">
-            <img src="https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80" alt="Benzinării">
+        <a href="farmacii.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=300&q=80">
+            <div class="btn-text bg-green">💊 Farmacii</div>
+        </a>
+        <a href="magazine.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=300&q=80">
+            <div class="btn-text bg-red">🛍️ Magazine</div>
+        </a>
+        <a href="benzina.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1527018601619-a508a2be00cd?auto=format&fit=crop&w=300&q=80">
             <div class="btn-text bg-green">⛽ Benzinării</div>
+        </a>
+        <a href="piete.html" class="category-btn">
+            <img src="https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80">
+            <div class="btn-text bg-orange">🍅 Piețe</div>
         </a>
     </div>
 
-    <!-- Harta interactiva -->
-    <h3 style="text-align:center; margin-top:20px;">Caută pe hartă</h3>
     <div id="map"></div>
 
     <div class="bottom-nav">
-        <div>🏠<br>Acasă</div>
-        <div>⭐<br>Preferate</div>
-        <div>🔔<br>Notificări</div>
-        <div>🌐<br>Limbă</div>
+        <div>🏠<br>Acasă</div><div>⭐<br>Preferate</div><div>🔔<br>Notificări</div><div>🌐<br>Limbă</div>
     </div>
 
     <script>
-        // 1. Logica Jderului
+        // Jder
         const jder = document.getElementById('jder');
         let step = 0;
-
         function moveJder() {
-            const w = window.innerWidth - 100;
-            const h = window.innerHeight - 100;
+            const w = window.innerWidth - 80, h = window.innerHeight - 80;
             jder.classList.remove('stop');
-
-            if (step === 0) { jder.style.top = '100px'; jder.style.left = '10px'; }
-            else if (step === 1) { jder.style.top = '100px'; jder.style.left = w + 'px'; }
+            if (step === 0) { jder.style.top = '80px'; jder.style.left = '10px'; }
+            else if (step === 1) { jder.style.top = '80px'; jder.style.left = w + 'px'; }
             else if (step === 2) { jder.style.top = h + 'px'; jder.style.left = w + 'px'; }
             else if (step === 3) { jder.style.top = h + 'px'; jder.style.left = '10px'; }
-            
             step = (step + 1) % 4;
         }
-
         setInterval(() => { jder.classList.add('stop'); }, 5000);
-        moveJder();
-        setInterval(moveJder, 4000);
+        moveJder(); setInterval(moveJder, 4000);
 
-        // 2. Logica pentru Locație
+        // Locatie
         function getLocation() {
-            const locText = document.getElementById('loc-text');
-            locText.innerText = "⏳ Se caută...";
-            
+            document.getElementById('loc-text').innerText = "⏳ Se caută...";
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        locText.innerText = "✅ Locație găsită!";
-                        // Mutam harta pe locatia ta
-                        map.setView([position.coords.latitude, position.coords.longitude], 14);
+                    (pos) => {
+                        document.getElementById('loc-text').innerText = "✅ Locație găsită!";
+                        map.setView([pos.coords.latitude, pos.coords.longitude], 14);
                     },
-                    (error) => {
-                        locText.innerText = "❌ Locație blocată";
-                        alert("Te rog permite accesul la locație din setările telefonului!");
+                    (err) => {
+                        document.getElementById('loc-text').innerText = "❌ Locație blocată";
+                        alert("Te rog permite accesul la locație (GPS) din setările telefonului!");
                     }
                 );
-            } else {
-                locText.innerText = "❌ Nu suportă locația";
             }
         }
 
-        // 3. Logica pentru Harta
-        // Coordonate initiale (Cluj-Napoca)
+        // Harta
         var map = L.map('map').setView([46.7712, 23.6236], 13);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // Adaugam un pin de test
-        var marker = L.marker([46.7712, 23.6236]).addTo(map);
-        marker.bindPopup("<b>Restaurant de test</b><br>Program: 08:00 - 22:00<br><br><button onclick='alert(\"Aici va fi chatul!\")'>Deschide Chat</button>").openPopup();
-
-        // 4. Logica pentru Categorii (Pagini secundare)
-        function openCategory(name) {
-            // Aici vom face mai tarziu paginile. Deocamdata aratam un meniu de subcategorii.
-            let subcat = "";
-            if(name === 'Restaurante') subcat = "Pizzerii, Cafenele, Fast Food";
-            if(name === 'Parcări') subcat = "Parcări publice, Parcări private, Locuri handicap";
-            if(name === 'Cozi') subcat = "Bancomate, Instituții, Magazine";
-            
-            alert("Ai deschis categoria: " + name + "\n\nSubcategorii: " + subcat + "\n\n(Aici vom pune lista completa cu poze)");
-        }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([46.7712, 23.6236]).addTo(map)
+            .bindPopup("<b>Restaurant Test</b><br>Program: 08:00 - 22:00<br><br><a href='restaurante.html' style='color:blue;'>Vezi detalii</a>");
     </script>
 </body>
 </html>
