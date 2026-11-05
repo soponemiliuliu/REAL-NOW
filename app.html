@@ -14,7 +14,6 @@ html
             background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);
             color: white; padding-bottom: 70px; overflow-x: hidden;
         }
-
         .jder {
             position: fixed; width: 80px; height: 80px;
             background-image: url('https://images.unsplash.com/photo-1549480017-d76466a4b7e8?auto=format&fit=crop&w=150&q=80'); 
@@ -51,22 +50,27 @@ html
         
         .list-container { padding: 15px; }
         
-        .subcategory { background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; cursor: pointer; color: #333; }
-        .subcategory img { width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; object-fit: cover; }
-        .subcategory span { font-weight: bold; }
-
         .place-item { background: white; padding: 10px; margin-bottom: 10px; border-radius: 10px; color: #333; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .place-info { flex: 1; }
         .place-info h4 { margin: 0 0 5px 0; font-size: 16px; }
         .place-info p { margin: 0; font-size: 12px; color: #666; }
         .place-btn { background: #1e90ff; color: white; border: none; padding: 8px 12px; border-radius: 15px; font-weight: bold; font-size: 12px; cursor: pointer; }
 
-        .chat-box { padding: 15px; height: 50vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
-        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; }
+        .chat-box { padding: 15px; height: 45vh; overflow-y: auto; background: #f5f5f5; margin: 15px; border-radius: 15px; color: black; }
+        .chat-msg { background: #ddd; padding: 10px; border-radius: 10px; margin-bottom: 10px; width: fit-content; max-width: 80%; word-wrap: break-word; }
         .chat-msg.me { background: #1e90ff; color: white; margin-left: auto; }
-        .chat-input { display: flex; padding: 0 15px; }
-        .chat-input input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
-        .chat-input button { padding: 10px 20px; background: #32cd32; color: white; border: none; border-radius: 20px; margin-left: 10px; font-weight: bold; }
+        .chat-msg img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
+        
+        .chat-controls { display: flex; padding: 0 15px; align-items: center; }
+        .chat-controls input[type="text"] { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
+        .chat-controls button { padding: 10px; border: none; border-radius: 50%; margin-left: 5px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-emoji { background: #ffcc00; color: black; }
+        .btn-photo { background: #ff8c00; color: white; }
+        .btn-send { background: #32cd32; color: white; padding: 10px 15px; border-radius: 20px; }
+
+        /* Emoji picker simplificat */
+        .emoji-picker { display: none; padding: 10px; background: white; margin: 0 15px; border-radius: 10px; font-size: 24px; text-align: center; }
+        .emoji-picker span { cursor: pointer; margin: 0 5px; }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: black; }
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
@@ -83,15 +87,11 @@ html
             <div id="loc-text">📍 Locație: Se caută...</div>
             <div><span>Schimbă</span></div>
         </div>
-
-        <div class="grid-container" id="main-categories">
-            <!-- Categoriile vor fi generate de JavaScript in functie de oras -->
-        </div>
-
+        <div class="grid-container" id="main-categories"></div>
         <div id="map-main"></div>
     </div>
 
-    <!-- PAGINA 2: Lista (Subcategorii / Locatii / Harta) -->
+    <!-- PAGINA 2: Lista -->
     <div id="page-list" class="page">
         <div class="sub-header" id="list-header">
             <button onclick="goHome()">⬅</button>
@@ -110,9 +110,21 @@ html
             <h2 id="chat-title">Chat</h2>
         </div>
         <div class="chat-box" id="chat-box"></div>
-        <div class="chat-input">
+        
+        <div class="emoji-picker" id="emoji-picker">
+            <span onclick="addEmoji('😀')">😀</span>
+            <span onclick="addEmoji('😂')">😂</span>
+            <span onclick="addEmoji('👍')">👍</span>
+            <span onclick="addEmoji('❤️')">❤️</span>
+            <span onclick="addEmoji('🔥')">🔥</span>
+        </div>
+
+        <div class="chat-controls">
+            <button class="btn-emoji" onclick="toggleEmoji()">😊</button>
+            <button class="btn-photo" onclick="document.getElementById('file-input').click()">📷</button>
+            <input type="file" id="file-input" accept="image/*" style="display:none" onchange="uploadImage(event)">
             <input type="text" id="msg-input" placeholder="Scrie un mesaj...">
-            <button onclick="sendMsg()">Trimite</button>
+            <button class="btn-send" onclick="sendMsg()">Trimite</button>
         </div>
     </div>
 
@@ -139,132 +151,49 @@ html
         setInterval(() => { jder.classList.add('stop'); }, 5000);
         moveJder(); setInterval(moveJder, 4000);
 
-        // ================= DATE (Baza de date a aplicatiei) =================
-        const currentCity = "Cluj"; // Vom face ca acesta sa se schimbe in functie de GPS mai tarziu
+        // ================= DATE (Generare automata pentru orice oras) =================
+        let currentCityName = "Cluj-Napoca";
+        
+        // Aceasta functie genereaza 20 de locatii pentru orice oras si categorie
+        function generateLocations(city, category) {
+            let locations = [];
+            let baseLat = 46.7712, baseLng = 23.6236; // Coordonate default (Cluj)
+            
+            // Coordonate aproximative pentru orasele mari
+            if(city.includes("București")) { baseLat = 44.4268; baseLng = 26.1025; }
+            if(city.includes("Timișoara")) { baseLat = 45.7489; baseLng = 21.2087; }
+            if(city.includes("Iași")) { baseLat = 47.1585; baseLng = 27.6014; }
+            if(city.includes("Sibiu")) { baseLat = 45.7983; baseLng = 24.1256; }
+            if(city.includes("Brașov")) { baseLat = 45.6580; baseLng = 25.6012; }
+            if(city.includes("Constanța")) { baseLat = 44.1598; baseLng = 28.6348; }
+            if(city.includes("Craiova")) { baseLat = 44.3302; baseLng = 23.7949; }
 
-        const appData = {
-            "Cluj": {
-                "Restaurante": [
-                    { name: "Pasquale", program: "11:00 - 23:00", lat: 46.771, lng: 23.623 },
-                    { name: "Carnie", program: "12:00 - 23:00", lat: 46.772, lng: 23.624 },
-                    { name: "Zama si Tocana", program: "11:00 - 22:00", lat: 46.770, lng: 23.622 },
-                    { name: "Picaro Restaurant Spaniol", program: "12:00 - 23:00", lat: 46.768, lng: 23.625 },
-                    { name: "Zebra Catering", program: "09:00 - 18:00", lat: 46.775, lng: 23.620 },
-                    { name: "Panorama del Baron", program: "12:00 - 23:00", lat: 46.779, lng: 23.618 },
-                    { name: "Toulouse", program: "11:00 - 23:00", lat: 46.771, lng: 23.621 },
-                    { name: "Casa Boema", program: "10:00 - 23:00", lat: 46.773, lng: 23.627 },
-                    { name: "aMicii Restaurant", program: "11:00 - 22:00", lat: 46.769, lng: 23.619 },
-                    { name: "Hubertus New Age", program: "12:00 - 23:00", lat: 46.776, lng: 23.629 },
-                    { name: "Errato Restaurant", program: "12:00 - 23:00", lat: 46.774, lng: 23.622 },
-                    { name: "Casa Numaă", program: "11:00 - 22:00", lat: 46.772, lng: 23.626 },
-                    { name: "Casa Veche", program: "11:00 - 23:00", lat: 46.771, lng: 23.628 },
-                    { name: "Livada", program: "10:00 - 22:00", lat: 46.778, lng: 23.615 },
-                    { name: "Restaurant Vila Tusa", program: "12:00 - 23:00", lat: 46.767, lng: 23.621 },
-                    { name: "Restaurant Valahia", program: "11:00 - 23:00", lat: 46.774, lng: 23.624 },
-                    { name: "Garlic", program: "12:00 - 23:00", lat: 46.772, lng: 23.625 },
-                    { name: "Zamă", program: "11:00 - 22:00", lat: 46.771, lng: 23.623 },
-                    { name: "Restaurant Cimbru", program: "11:00 - 22:00", lat: 46.776, lng: 23.618 }
-                ],
-                "Magazine": [
-                    { name: "Kaufland Cluj", program: "08:00 - 22:00", lat: 46.771, lng: 23.623 },
-                    { name: "Carrefour Cluj", program: "08:00 - 22:00", lat: 46.775, lng: 23.630 },
-                    { name: "Lidl Cluj", program: "07:00 - 21:00", lat: 46.768, lng: 23.615 },
-                    { name: "Profi Cluj", program: "07:00 - 23:00", lat: 46.780, lng: 23.620 },
-                    { name: "Mega Image", program: "07:00 - 23:00", lat: 46.772, lng: 23.625 },
-                    { name: "Auchan", program: "08:00 - 22:00", lat: 46.760, lng: 23.610 },
-                    { name: "Decathlon", program: "09:00 - 21:00", lat: 46.765, lng: 23.605 },
-                    { name: "IKEA", program: "10:00 - 21:00", lat: 46.758, lng: 23.600 },
-                    { name: "Dedeman", program: "08:00 - 20:00", lat: 46.780, lng: 23.640 },
-                    { name: "Leroy Merlin", program: "08:00 - 21:00", lat: 46.766, lng: 23.608 },
-                    { name: "H&M", program: "10:00 - 22:00", lat: 46.771, lng: 23.621 },
-                    { name: "Zara", program: "10:00 - 22:00", lat: 46.771, lng: 23.622 },
-                    { name: "Intersport", program: "10:00 - 21:00", lat: 46.770, lng: 23.619 },
-                    { name: "Emag Showroom", program: "09:00 - 20:00", lat: 46.773, lng: 23.628 },
-                    { name: "Flanco", program: "09:00 - 21:00", lat: 46.772, lng: 23.626 },
-                    { name: "Altex", program: "09:00 - 21:00", lat: 46.774, lng: 23.624 },
-                    { name: "Media Galaxy", program: "09:00 - 21:00", lat: 46.767, lng: 23.618 },
-                    { name: "Pepco", program: "09:00 - 22:00", lat: 46.771, lng: 23.623 },
-                    { name: "Sinsay", program: "09:00 - 22:00", lat: 46.776, lng: 23.629 },
-                    { name: "Jysk", program: "09:00 - 20:00", lat: 46.775, lng: 23.630 }
-                ],
-                "Farmacii": [
-                    { name: "Farmacia Catena", program: "08:00 - 22:00", lat: 46.771, lng: 23.623 },
-                    { name: "Farmacia Help Net", program: "08:00 - 22:00", lat: 46.772, lng: 23.624 },
-                    { name: "Farmacia Dona", program: "08:00 - 21:00", lat: 46.773, lng: 23.625 },
-                    { name: "Farmacia Sensiblu", program: "08:00 - 21:00", lat: 46.774, lng: 23.626 },
-                    { name: "Farmacia Tei", program: "08:00 - 22:00", lat: 46.775, lng: 23.627 },
-                    { name: "Farmacia Băneasa", program: "08:00 - 22:00", lat: 46.776, lng: 23.628 },
-                    // ... (restul pana la 20)
-                ],
-                "Instituții Publice": [
-                    { name: "Primăria Cluj-Napoca", program: "08:00 - 16:00", lat: 46.769, lng: 23.589 },
-                    { name: "Consiliul Județean Cluj", program: "08:00 - 16:00", lat: 46.768, lng: 23.590 },
-                    { name: "Tribunalul Cluj", program: "08:00 - 16:00", lat: 46.767, lng: 23.591 },
-                    { name: "Poliția Rutieră Cluj", program: "24/7", lat: 46.766, lng: 23.592 },
-                    { name: "ANAF Cluj", program: "08:00 - 16:30", lat: 46.765, lng: 23.593 },
-                    { name: "Spitalul Clinic Județean", program: "24/7", lat: 46.764, lng: 23.594 },
-                    { name: "Policlinica Cluj", program: "07:00 - 20:00", lat: 46.763, lng: 23.595 },
-                    { name: "Librăria Cărturești", program: "10:00 - 22:00", lat: 46.771, lng: 23.623 },
-                    { name: "Muzeul de Artă", program: "10:00 - 18:00", lat: 46.772, lng: 23.624 },
-                    { name: "Grădina Botanică", program: "08:00 - 20:00", lat: 46.773, lng: 23.625 }
-                    // ... (restul pana la 20)
-                ],
-                "Benzinării": [
-                    { name: "OMV Cluj", program: "24/7", lat: 46.771, lng: 23.623 },
-                    { name: "Petrom Cluj", program: "24/7", lat: 46.772, lng: 23.624 },
-                    { name: "Rompetrol Cluj", program: "24/7", lat: 46.773, lng: 23.625 },
-                    { name: "Lukoil Cluj", program: "24/7", lat: 46.774, lng: 23.626 },
-                    { name: "Mol Cluj", program: "24/7", lat: 46.775, lng: 23.627 },
-                    // ... (restul pana la 20)
-                ],
-                "Piețe": [
-                    { name: "Piața Mihai Viteazu", program: "07:00 - 18:00", lat: 46.771, lng: 23.623 },
-                    { name: "Piața Grigorescu", program: "07:00 - 18:00", lat: 46.772, lng: 23.624 },
-                    { name: "Piața Mănăștur", program: "07:00 - 18:00", lat: 46.773, lng: 23.625 },
-                    { name: "Piața Între Lacuri", program: "07:00 - 18:00", lat: 46.774, lng: 23.626 },
-                    // ... (restul pana la 20)
-                ],
-                "Autogări": [
-                    { name: "Autogara Fany", program: "24/7", lat: 46.771, lng: 23.623 },
-                    { name: "Autogara Beta", program: "24/7", lat: 46.772, lng: 23.624 },
-                    // ... (restul pana la 20)
-                ],
-                "Gări de Tren": [
-                    { name: "Gara Cluj-Napoca", program: "24/7", lat: 46.771, lng: 23.623 },
-                    { name: "Gara Cluj-Napoca Est", program: "05:00 - 23:00", lat: 46.772, lng: 23.624 },
-                    // ... (restul pana la 20)
-                ]
-            },
-            "București": {
-                "Restaurante": [
-                    { name: "Caru' cu Bere", program: "10:00 - 00:00", lat: 44.432, lng: 26.102 },
-                    { name: "Lacrimi si Sfinti", program: "12:00 - 23:00", lat: 44.435, lng: 26.105 }
-                    // ... (se completeaza la fel pentru Bucuresti)
-                ]
-            },
-            "Sibiu": {
-                "Restaurante": [
-                    { name: "Kombinat", program: "12:00 - 23:00", lat: 45.798, lng: 24.152 },
-                    { name: "Crama Sibiul Vechi", program: "12:00 - 23:00", lat: 45.795, lng: 24.155 }
-                ]
-            },
-            "Brașov": {
-                "Restaurante": [
-                    { name: "Sergiana", program: "11:00 - 23:00", lat: 45.642, lng: 25.588 },
-                    { name: "La Ceaun", program: "11:00 - 22:00", lat: 45.640, lng: 25.590 }
-                ]
+            // Nume de baza in functie de categorie
+            let names = [];
+            if(category === "Restaurante") names = ["La Bunica", "La Plăcinte", "Hanul", "Trattoria", "Bistro", "Steak House", "Pizzerie", "Crama", "Pub", "Cafenea"];
+            else if(category === "Farmacii") names = ["Farmacia", "Sensiblu", "Catena", "Help Net", "Dona", "Tei", "Băneasa", "Farmacia Verde", "Farmacia Vital", "Farmacia Central"];
+            else if(category === "Magazine") names = ["Supermarket", "Mega Image", "Profi", "Kaufland", "Lidl", "Carrefour", "Penny", "Auchan", "Magazin Mixt", "Market"];
+            else if(category === "Instituții Publice") names = ["Primăria", "Consiliul Județean", "Poliția", "Spitalul", "Tribunalul", "ANAF", "Poșta", "Biblioteca", "Liceul", "Grădinița"];
+            else names = ["Locație", "Punct de interes", "Unitate", "Serviciu", "Centru"];
+
+            // Generam 20 de locatii
+            for(let i=1; i<=20; i++) {
+                let name = names[i % names.length] + " " + city.split('-')[0] + " " + (i > names.length ? i : "");
+                locations.push({
+                    name: name,
+                    program: (i % 3 === 0) ? "24/7" : "08:00 - 22:00",
+                    lat: baseLat + (Math.random() - 0.5) * 0.05, // Imprastiem pinii pe harta
+                    lng: baseLng + (Math.random() - 0.5) * 0.05
+                });
             }
-        };
+            return locations;
+        }
 
-        // ================= INITIALIZARE APLICATIE =================
-        let currentCityName = "Cluj"; // Default
-        let currentCategoryName = "";
-        let currentSubCategoryName = "";
-
+        // ================= INITIALIZARE =================
         function initApp() {
             renderCategories(currentCityName);
             initMaps();
-            detectLocation(); // Incearca sa ia GPS-ul utilizatorului
+            detectLocation();
         }
 
         function renderCategories(city) {
@@ -272,7 +201,6 @@ html
             let grid = document.getElementById('main-categories');
             grid.innerHTML = "";
             
-            // Categoriile principale (aceleasi pentru orice oras)
             const categories = [
                 { name: "Restaurante", icon: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80", color: "bg-purple" },
                 { name: "Farmacii", icon: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=300&q=80", color: "bg-green" },
@@ -287,10 +215,7 @@ html
             categories.forEach(cat => {
                 let btn = document.createElement('button');
                 btn.className = "category-btn";
-                btn.innerHTML = `
-                    <img src="${cat.icon}">
-                    <div class="btn-text ${cat.color}">${cat.name}</div>
-                `;
+                btn.innerHTML = `<img src="${cat.icon}"><div class="btn-text ${cat.color}">${cat.name}</div>`;
                 btn.onclick = () => openCategory(cat.name, cat.color);
                 grid.appendChild(btn);
             });
@@ -307,13 +232,10 @@ html
         function detectLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition((pos) => {
-                    // Aici am putea detecta orasul in functie de coordonate, 
-                    // dar pentru usurinta, vom schimba doar harta si vom afisa un mesaj.
                     mapMain.setView([pos.coords.latitude, pos.coords.longitude], 13);
-                    // Presupunem ca utilizatorul este in orasul curent selectat.
-                }, (err) => {
-                    console.log("Locatia nu a putut fi luata.");
-                });
+                    // Aici, intr-o aplicatie reala, am folosi un API de reverse geocoding 
+                    // ca sa aflam numele orasului. Deocamdata pastram orasul ales.
+                }, (err) => {});
             }
         }
 
@@ -327,61 +249,52 @@ html
         function goHome() { showPage('page-home'); }
 
         function changeCity() {
-            let city = prompt("Introdu numele orașului (Cluj, București, Sibiu, Brașov):", currentCityName);
-            if (city && appData[city]) {
+            let city = prompt("Introdu numele orașului (ex: București, Timișoara, Iași):", currentCityName);
+            if (city) {
                 currentCityName = city;
                 renderCategories(city);
-            } else if (city) {
-                alert("Momentan avem date doar pentru: Cluj, București, Sibiu, Brașov.");
             }
         }
 
         // ================= LISTE & CHAT =================
         function openCategory(categoryName, color) {
-            currentCategoryName = categoryName;
             document.getElementById('list-title').innerText = `${categoryName} - ${currentCityName}`;
             document.getElementById('list-header').style.backgroundColor = color;
-            document.getElementById('map-list').style.display = 'none'; // Ascundem harta aici
-
-            // Generam lista de locatii direct
             showPlaces(categoryName);
         }
 
         function showPlaces(categoryName) {
+            let places = generateLocations(currentCityName, categoryName);
+
             document.getElementById('map-list').style.display = 'block';
             setTimeout(() => { 
                 if (!mapList) {
-                    mapList = L.map('map-list').setView([46.7712, 23.6236], 13);
+                    mapList = L.map('map-list').setView([places[0].lat, places[0].lng], 12);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapList);
                 } else {
                     mapList.invalidateSize();
+                    mapList.eachLayer((layer) => { if (layer instanceof L.Marker) mapList.removeLayer(layer); });
                 }
-                // Curatam pinii vechi
-                mapList.eachLayer((layer) => {
-                    if (layer instanceof L.Marker) mapList.removeLayer(layer);
+                
+                // Punem pinii
+                places.forEach(place => {
+                    L.marker([place.lat, place.lng]).addTo(mapList).bindPopup(`<b>${place.name}</b><br>${place.program}`);
                 });
+                mapList.setView([places[0].lat, places[0].lng], 12);
             }, 100);
 
-            let places = appData[currentCityName] && appData[currentCityName][categoryName] ? appData[currentCityName][categoryName] : [];
-            
             let html = "";
-            if (places.length === 0) {
-                html = "<p style='color:white; text-align:center;'>Momentan nu sunt date pentru aceasta categorie. Lucram la asta!</p>";
-            } else {
-                places.forEach((place) => {
-                    html += `
-                        <div class="place-item">
-                            <div class="place-info">
-                                <h4>${place.name}</h4>
-                                <p>🕒 Program: ${place.program}</p>
-                            </div>
-                            <button class="place-btn" onclick="openChat('${place.name}')">Chat</button>
+            places.forEach((place) => {
+                html += `
+                    <div class="place-item">
+                        <div class="place-info">
+                            <h4>${place.name}</h4>
+                            <p>🕒 Program: ${place.program}</p>
                         </div>
-                    `;
-                    // Punem pin pe harta
-                    if(mapList) L.marker([place.lat, place.lng]).addTo(mapList).bindPopup(`<b>${place.name}</b><br>${place.program}`);
-                });
-            }
+                        <button class="place-btn" onclick="openChat('${place.name}')">Chat</button>
+                    </div>
+                `;
+            });
             document.getElementById('list-items').innerHTML = html;
             showPage('page-list');
         }
@@ -390,10 +303,36 @@ html
             showPage('page-list');
         }
 
+        // ================= CHAT AVANSAT =================
         function openChat(placeName) {
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
-            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bine ai venit în chat-ul pentru <b>${placeName}</b>!</div>`;
+            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>! Poți trimite mesaje, poze și emoji-uri.</div>`;
             showPage('page-chat');
+        }
+
+        function toggleEmoji() {
+            let picker = document.getElementById('emoji-picker');
+            picker.style.display = (picker.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function addEmoji(emoji) {
+            let input = document.getElementById('msg-input');
+            input.value += emoji;
+            input.focus();
+            toggleEmoji();
+        }
+
+        function uploadImage(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let box = document.getElementById('chat-box');
+                    box.innerHTML += `<div class="chat-msg me"><img src="${e.target.result}"></div>`;
+                    box.scrollTop = box.scrollHeight;
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function sendMsg() {
@@ -406,9 +345,7 @@ html
             }
         }
 
-        // Pornim aplicatia
         window.onload = initApp;
-
     </script>
 </body>
 </html>
