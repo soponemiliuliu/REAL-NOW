@@ -253,25 +253,33 @@ html
             "Gări de Tren": ["Toate Gările"]
         };
 
-        // Maparea către categorii Geoapify
+        // Corectarea mapării pentru fiecare subcategorie (AICI ERA PROBLEMA)
         const geoapifyCategories = {
-            "Restaurante": "catering.restaurant",
+            "Toate Restaurantele": "catering.restaurant",
             "Fast Food": "catering.fast_food",
             "Pizzerii": "catering.pizza",
-            "Restaurante Tradiționale": "catering.restaurant.regional",
-            "Magazine": "commercial.supermarket",
+            "Restaurante Tradiționale": "catering.restaurant",
+            
+            "Toate Magazinele": "commercial",
             "Alimentare": "commercial.supermarket",
             "Bricolaj & Construcții": "commercial.diy",
             "Mall-uri": "commercial.shopping_mall",
-            "Farmacii": "healthcare.pharmacy",
+            
+            "Toate Farmaciile": "healthcare.pharmacy",
             "Farmacii de Gardă": "healthcare.pharmacy",
-            "Benzinării": "service.vehicle.fuel",
-            "Instituții Publice": "amenity.townhall",
+            
+            "Toate Benzinăriile": "service.vehicle.fuel",
+            "Non-Stop (24/7)": "service.vehicle.fuel",
+            
+            "Toate Instituțiile": "amenity",
             "Spitale": "healthcare.hospital",
             "Primării & Poliție": "amenity.townhall,amenity.police",
-            "Piețe": "commercial.marketplace",
-            "Autogări": "public_transport.bus",
-            "Gări de Tren": "public_transport.train"
+            
+            "Toate Piețele": "commercial.marketplace",
+            "Piețe Agroalimentare": "commercial.marketplace",
+            
+            "Toate Autogările": "public_transport.bus",
+            "Toate Gările": "public_transport.train"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -394,7 +402,7 @@ html
             currentSubCategoryName = subCategoryName;
             
             document.getElementById('list-title').innerText = `${categoryName} - ${subCategoryName}`;
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale...</div>";
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele...</div>";
             document.getElementById('search-input').value = "";
             window.location.hash = 'list';
 
@@ -412,7 +420,6 @@ html
             }
             document.getElementById('map-list').style.display = 'block';
 
-            // Preluăm datele din Geoapify
             let category = geoapifyCategories[subCategoryName] || "catering.restaurant";
             let url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},5000&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
 
@@ -428,13 +435,18 @@ html
                         let address = props.address_line1 || props.address_line2 || currentCityName;
                         let openingHours = props.opening_hours || "Nedefinit";
                         
+                        let priceInfo = null;
+                        if (categoryName === "Benzinării") {
+                            priceInfo = "Benzină: 7.15 RON/l | Motorină: 7.35 RON/l";
+                        }
+
                         places.push({
                             name: name,
                             address: address,
                             program: openingHours,
                             lat: props.lat,
                             lng: props.lon,
-                            price: (categoryName === "Benzinării") ? "Benzină: 7.15 RON/l | Motorină: 7.35 RON/l" : null
+                            price: priceInfo
                         });
                     });
 
@@ -536,7 +548,8 @@ html
                             address: props.address_line2 || currentCityName,
                             program: "Nedefinit",
                             lat: props.lat,
-                            lng: props.lon
+                            lng: props.lon,
+                            price: null
                         });
                     });
                     displayResults(places);
