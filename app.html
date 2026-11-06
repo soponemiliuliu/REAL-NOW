@@ -201,6 +201,9 @@ html
     </div>
 
     <script>
+        // ================= CHEIA TA API =================
+        const GEOAPIFY_API_KEY = "047140cea56d45a48ddff8530dbb3359";
+
         const omulet = document.getElementById('omulet');
         let step = 0;
         function moveOmlet() {
@@ -222,7 +225,6 @@ html
         let currentDataList = []; 
         let showOnlyOpen = false;
 
-        // Coordonatele reale (centrale) pentru toate reședințele de județ din România
         const cityCoords = {
             "Cluj-Napoca": [46.7712, 23.6236], "București": [44.4268, 26.1025], "Timișoara": [45.7489, 21.2087],
             "Iași": [47.1585, 27.6014], "Sibiu": [45.7983, 24.1256], "Brașov": [45.6580, 25.6012],
@@ -251,48 +253,26 @@ html
             "Gări de Tren": ["Toate Gările"]
         };
 
-        const categoryTags = {
-            "Restaurante": "restaurant", "Farmacii": "farmacie", "Magazine": "supermarket",
-            "Benzinării": "benzinarie", "Instituții Publice": "primarie", "Piețe": "piata",
-            "Autogări": "autogara", "Gări de Tren": "gara"
+        // Maparea către categorii Geoapify
+        const geoapifyCategories = {
+            "Restaurante": "catering.restaurant",
+            "Fast Food": "catering.fast_food",
+            "Pizzerii": "catering.pizza",
+            "Restaurante Tradiționale": "catering.restaurant.regional",
+            "Magazine": "commercial.supermarket",
+            "Alimentare": "commercial.supermarket",
+            "Bricolaj & Construcții": "commercial.diy",
+            "Mall-uri": "commercial.shopping_mall",
+            "Farmacii": "healthcare.pharmacy",
+            "Farmacii de Gardă": "healthcare.pharmacy",
+            "Benzinării": "service.vehicle.fuel",
+            "Instituții Publice": "amenity.townhall",
+            "Spitale": "healthcare.hospital",
+            "Primării & Poliție": "amenity.townhall,amenity.police",
+            "Piețe": "commercial.marketplace",
+            "Autogări": "public_transport.bus",
+            "Gări de Tren": "public_transport.train"
         };
-
-        // FUNCTIE CARE GENEREAZĂ 20 DE EXEMPLE PENTRU ORICE ORAȘ ȘI SUBCATEGORIE
-        function generate20Places(city, category, subcat) {
-            let places = [];
-            let [lat, lng] = getCityCoords(city);
-            
-            let brandNames = [];
-            if (category === "Magazine" && subcat === "Alimentare") brandNames = ["Kaufland", "Lidl", "Profi", "Mega Image", "Carrefour", "Supeco", "Penny", "Auchan"];
-            else if (category === "Magazine" && subcat === "Bricolaj & Construcții") brandNames = ["Dedeman", "Leroy Merlin", "Hornbach", "Brico Dépôt"];
-            else if (category === "Magazine" && subcat === "Mall-uri") brandNames = ["Iulius Mall", "VIVO!", "AFI Cotroceni", "Băneasa Shopping City", "Coresi Shopping Resort"];
-            else if (category === "Restaurante" && subcat === "Fast Food") brandNames = ["McDonald's", "KFC", "Burger King", "Subway", "Shaorma"];
-            else if (category === "Restaurante" && subcat === "Pizzerii") brandNames = ["Pizza Hut", "Domino's Pizza", "La Piazzetta"];
-            else if (category === "Restaurante" && subcat === "Restaurante Tradiționale") brandNames = ["La Bunica", "Hanul", "Casa Boema", "Roata", "Baracca"];
-            else if (category === "Farmacii") brandNames = ["Catena", "Help Net", "Dona", "Sensiblu", "Tei"];
-            else if (category === "Benzinării") brandNames = ["OMV", "Petrom", "Rompetrol", "Lukoil", "Mol", "SOCAR"];
-            else if (category === "Instituții Publice" && subcat === "Spitale") brandNames = ["Spitalul Județean", "Spitalul Municipal", "Spitalul de Urgență"];
-            else if (category === "Instituții Publice" && subcat === "Primării & Poliție") brandNames = ["Primăria", "Poliția Locală", "Poliția Rutieră", "ANAF"];
-            else if (category === "Piețe") brandNames = ["Piața Centrală", "Piața Mare", "Piața Agroalimentară"];
-            else if (category === "Autogări") brandNames = ["Autogara", "Autogara Beta", "Autogara Fany"];
-            else if (category === "Gări de Tren") brandNames = ["Gara"];
-            else brandNames = ["Locație"];
-
-            for(let i=1; i<=20; i++) {
-                let brand = brandNames[(i-1) % brandNames.length];
-                let name = `${brand} ${city} ${i > brandNames.length ? i : ''}`.trim();
-                let openHour = (i % 4 === 0) ? "24/7" : "08:00 - 22:00";
-                
-                places.push({
-                    name: name,
-                    program: openHour,
-                    lat: lat + (Math.random() - 0.5) * 0.05,
-                    lng: lng + (Math.random() - 0.5) * 0.05,
-                    price: (category === "Benzinării") ? "Benzină: 7.15 RON/l | Motorină: 7.35 RON/l" : null
-                });
-            }
-            return places;
-        }
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
@@ -353,7 +333,6 @@ html
         }
 
         function changeCity() {
-            // Creăm o listă cu toate orașele pentru prompt
             let cityList = Object.keys(cityCoords).join(", ");
             let city = prompt("Alege un oraș din listă:\n\n" + cityList, currentCityName);
             if (city && cityCoords[city]) { 
@@ -415,7 +394,7 @@ html
             currentSubCategoryName = subCategoryName;
             
             document.getElementById('list-title').innerText = `${categoryName} - ${subCategoryName}`;
-            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă 20 de locații...</div>";
+            document.getElementById('list-items').innerHTML = "<div class='loading'>Se încarcă datele reale...</div>";
             document.getElementById('search-input').value = "";
             window.location.hash = 'list';
 
@@ -433,9 +412,38 @@ html
             }
             document.getElementById('map-list').style.display = 'block';
 
-            // Generăm cele 20 de locații
-            currentDataList = generate20Places(currentCityName, categoryName, subCategoryName);
-            displayResults(currentDataList);
+            // Preluăm datele din Geoapify
+            let category = geoapifyCategories[subCategoryName] || "catering.restaurant";
+            let url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},5000&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let features = data.features || [];
+                    let places = [];
+
+                    features.forEach(f => {
+                        let props = f.properties;
+                        let name = props.name || "Fără nume";
+                        let address = props.address_line1 || props.address_line2 || currentCityName;
+                        let openingHours = props.opening_hours || "Nedefinit";
+                        
+                        places.push({
+                            name: name,
+                            address: address,
+                            program: openingHours,
+                            lat: props.lat,
+                            lng: props.lon,
+                            price: (categoryName === "Benzinării") ? "Benzină: 7.15 RON/l | Motorină: 7.35 RON/l" : null
+                        });
+                    });
+
+                    currentDataList = places;
+                    displayResults(currentDataList);
+                })
+                .catch(err => {
+                    document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
+                });
         }
 
         function goBackToSubcat() {
@@ -469,14 +477,14 @@ html
                     <div class="place-item">
                         <div class="place-info">
                             <h4><span class="status-dot ${statusColor}"></span> ${name}</h4>
-                            <p>📍 ${currentCityName}</p>
+                            <p>📍 ${place.address}</p>
                             <p>🕒 <strong>Program: ${openingHours}</strong></p>
                             ${priceHtml}
                             ${queueBtnHtml}
                         </div>
                         <div class="action-btns">
                             <button class="btn-fav" onclick="toggleFavorite('${name.replace(/'/g, "\\'")}', this)">${favIcon}</button>
-                            <a href="https://www.google.com/maps/search/?api=1&query=${name.replace(/\s+/g, '+')}+${currentCityName.replace(/\s+/g, '+')}" target="_blank" class="place-btn btn-nav">Navighează</a>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" class="place-btn btn-nav">Navighează</a>
                             <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
                         </div>
                     </div>
@@ -506,15 +514,33 @@ html
         }
 
         function searchSpecificPlace() {
-            let query = document.getElementById('search-input').value.toLowerCase();
+            let query = document.getElementById('search-input').value;
             if (query.trim() === "") { displayResults(currentDataList); return; }
 
-            let filtered = currentDataList.filter(p => p.name.toLowerCase().includes(query));
-            if (filtered.length === 0) {
-                document.getElementById('list-items').innerHTML = "<div class='loading'>Nu s-a găsit nicio locație cu acest nume în lista generată.</div>";
-            } else {
-                displayResults(filtered);
-            }
+            let [lat, lng] = getCityCoords(currentCityName);
+            let url = `https://api.geoapify.com/v1/geocode/search?text=${query}+${currentCityName}&filter=circle:${lng},${lat},5000&limit=10&apiKey=${GEOAPIFY_API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let features = data.features || [];
+                    if (features.length === 0) {
+                        document.getElementById('list-items').innerHTML = "<div class='loading'>Nu s-a găsit nicio locație cu acest nume.</div>";
+                        return;
+                    }
+                    let places = [];
+                    features.forEach(f => {
+                        let props = f.properties;
+                        places.push({
+                            name: props.name || props.address_line1 || "Locație",
+                            address: props.address_line2 || currentCityName,
+                            program: "Nedefinit",
+                            lat: props.lat,
+                            lng: props.lon
+                        });
+                    });
+                    displayResults(places);
+                });
         }
 
         function toggleFavorite(placeName, btnElement) {
