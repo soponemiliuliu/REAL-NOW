@@ -242,28 +242,25 @@ html
             "Hunedoara": [45.7500, 22.9000], "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
         };
 
+        // Structura pe 2 subcategorii
         const subcategories = {
-            "Restaurante": ["Toate Restaurantele", "Fast Food", "Pizzerii", "Restaurante Tradiționale"],
-            "Magazine": ["Toate Magazinele", "Alimentare", "Bricolaj & Construcții", "Mall-uri"],
+            "Restaurante": ["Toate Restaurantele", "Fast Food & Pizzerii"],
+            "Magazine": ["Toate Magazinele", "Alimentare & Bricolaj"],
             "Farmacii": ["Toate Farmaciile", "Farmacii de Gardă"],
             "Benzinării": ["Toate Benzinăriile", "Non-Stop (24/7)"],
-            "Instituții Publice": ["Toate Instituțiile", "Spitale", "Primării & Poliție"],
+            "Instituții Publice": ["Primării", "Spitale", "Poliție", "Toate Instituțiile"], // Adăugat aici
             "Piețe": ["Toate Piețele", "Piețe Agroalimentare"],
-            "Autogări": ["Toate Autogările"],
-            "Gări de Tren": ["Toate Gările"]
+            "Autogări": ["Toate Autogările", "Autogări"],
+            "Gări de Tren": ["Toate Gările", "Gări"]
         };
 
-        // Corectarea mapării pentru fiecare subcategorie (AICI ERA PROBLEMA)
+        // Mapare corectată
         const geoapifyCategories = {
             "Toate Restaurantele": "catering.restaurant",
-            "Fast Food": "catering.fast_food",
-            "Pizzerii": "catering.pizza",
-            "Restaurante Tradiționale": "catering.restaurant",
+            "Fast Food & Pizzerii": "catering.fast_food,catering.pizza",
             
             "Toate Magazinele": "commercial",
-            "Alimentare": "commercial.supermarket",
-            "Bricolaj & Construcții": "commercial.diy",
-            "Mall-uri": "commercial.shopping_mall",
+            "Alimentare & Bricolaj": "commercial.supermarket,commercial.diy",
             
             "Toate Farmaciile": "healthcare.pharmacy",
             "Farmacii de Gardă": "healthcare.pharmacy",
@@ -271,15 +268,19 @@ html
             "Toate Benzinăriile": "service.vehicle.fuel",
             "Non-Stop (24/7)": "service.vehicle.fuel",
             
-            "Toate Instituțiile": "amenity",
+            "Primării": "amenity.townhall",
             "Spitale": "healthcare.hospital",
-            "Primării & Poliție": "amenity.townhall,amenity.police",
+            "Poliție": "amenity.police",
+            "Toate Instituțiile": "amenity.townhall,healthcare.hospital,amenity.police",
             
             "Toate Piețele": "commercial.marketplace",
             "Piețe Agroalimentare": "commercial.marketplace",
             
             "Toate Autogările": "public_transport.bus",
-            "Toate Gările": "public_transport.train"
+            "Autogări": "public_transport.bus",
+            
+            "Toate Gările": "public_transport.train",
+            "Gări": "public_transport.train"
         };
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
@@ -385,11 +386,11 @@ html
                 let btn = document.createElement('div');
                 btn.className = "subcat-btn";
                 let icon = "📌";
+                if(sub.includes("Primării")) icon = "🏛️";
+                if(sub.includes("Spitale")) icon = "🏥";
+                if(sub.includes("Poliție")) icon = "🚓";
+                if(sub.includes("Gardă")) icon = "🚑";
                 if(sub.includes("Alimentare")) icon = "🛒";
-                if(sub.includes("Bricolaj")) icon = "🔨";
-                if(sub.includes("Mall")) icon = "🛍️";
-                if(sub.includes("Fast Food")) icon = "🍔";
-                if(sub.includes("Pizzerii")) icon = "🍕";
                 
                 btn.innerHTML = `<span>${icon}</span> ${sub}`;
                 btn.onclick = function() { openPlacesList(categoryName, sub); };
@@ -420,8 +421,8 @@ html
             }
             document.getElementById('map-list').style.display = 'block';
 
-            let category = geoapifyCategories[subCategoryName] || "catering.restaurant";
-            let url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},5000&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
+            let category = geoapifyCategories[subCategoryName] || "amenity.townhall";
+            let url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},10000&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
 
             fetch(url)
                 .then(response => response.json())
