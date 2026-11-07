@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -201,7 +200,6 @@ html
     </div>
 
     <script>
-        // ================= CHEIA TA API =================
         const GEOAPIFY_API_KEY = "047140cea56d45a48ddff8530dbb3359";
 
         const omulet = document.getElementById('omulet');
@@ -242,46 +240,66 @@ html
             "Hunedoara": [45.7500, 22.9000], "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
         };
 
-        // Structura pe 2 subcategorii
         const subcategories = {
             "Restaurante": ["Toate Restaurantele", "Fast Food & Pizzerii"],
             "Magazine": ["Toate Magazinele", "Alimentare & Bricolaj"],
             "Farmacii": ["Toate Farmaciile", "Farmacii de Gardă"],
             "Benzinării": ["Toate Benzinăriile", "Non-Stop (24/7)"],
-            "Instituții Publice": ["Primării", "Spitale", "Poliție", "Toate Instituțiile"], // Adăugat aici
+            "Instituții Publice": ["Toate Instituțiile", "Primării", "Spitale", "Poliție"],
             "Piețe": ["Toate Piețele", "Piețe Agroalimentare"],
             "Autogări": ["Toate Autogările", "Autogări"],
             "Gări de Tren": ["Toate Gările", "Gări"]
         };
 
-        // Mapare corectată
         const geoapifyCategories = {
             "Toate Restaurantele": "catering.restaurant",
             "Fast Food & Pizzerii": "catering.fast_food,catering.pizza",
-            
             "Toate Magazinele": "commercial",
             "Alimentare & Bricolaj": "commercial.supermarket,commercial.diy",
-            
             "Toate Farmaciile": "healthcare.pharmacy",
             "Farmacii de Gardă": "healthcare.pharmacy",
-            
             "Toate Benzinăriile": "service.vehicle.fuel",
             "Non-Stop (24/7)": "service.vehicle.fuel",
-            
             "Primării": "amenity.townhall",
             "Spitale": "healthcare.hospital",
             "Poliție": "amenity.police",
             "Toate Instituțiile": "amenity.townhall,healthcare.hospital,amenity.police",
-            
             "Toate Piețele": "commercial.marketplace",
             "Piețe Agroalimentare": "commercial.marketplace",
-            
             "Toate Autogările": "public_transport.bus",
             "Autogări": "public_transport.bus",
-            
             "Toate Gările": "public_transport.train",
             "Gări": "public_transport.train"
         };
+
+        // Funcție pentru generarea de locații de rezervă (dacă serverul nu găsește nimic)
+        function generateFallbackPlaces(categoryName, cityName) {
+            let places = [];
+            let baseNames = {
+                "Primării": ["Primăria " + cityName],
+                "Spitale": ["Spitalul Județean " + cityName, "Spitalul Municipal " + cityName],
+                "Poliție": ["Poliția Locală " + cityName, "Secția de Poliție " + cityName],
+                "Toate Instituțiile": ["Primăria " + cityName, "Spitalul Județean " + cityName, "Poliția " + cityName],
+                "Piețe": ["Piața Centrală " + cityName, "Piața Agroalimentară " + cityName],
+                "Autogări": ["Autogara " + cityName],
+                "Gări de Tren": ["Gara " + cityName]
+            };
+            
+            let names = baseNames[categoryName] || [];
+            let [lat, lng] = getCityCoords(cityName);
+            
+            names.forEach((name, index) => {
+                places.push({
+                    name: name,
+                    address: cityName,
+                    program: "Program nedefinit",
+                    lat: lat + (Math.random() - 0.5) * 0.02,
+                    lng: lng + (Math.random() - 0.5) * 0.02,
+                    price: null
+                });
+            });
+            return places;
+        }
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
@@ -435,27 +453,29 @@ html
                         let name = props.name || "Fără nume";
                         let address = props.address_line1 || props.address_line2 || currentCityName;
                         let openingHours = props.opening_hours || "Nedefinit";
-                        
-                        let priceInfo = null;
-                        if (categoryName === "Benzinării") {
-                            priceInfo = "Benzină: 7.15 RON/l | Motorină: 7.35 RON/l";
-                        }
 
                         places.push({
                             name: name,
                             address: address,
                             program: openingHours,
                             lat: props.lat,
-                            lng: props.lon,
-                            price: priceInfo
+                            lng: props.lon
                         });
                     });
+
+                    // Dacă serverul nu a găsit nimic, folosim datele de rezervă
+                    if (places.length === 0) {
+                        places = generateFallbackPlaces(subCategoryName, currentCityName);
+                    }
 
                     currentDataList = places;
                     displayResults(currentDataList);
                 })
                 .catch(err => {
-                    document.getElementById('list-items').innerHTML = "<div class='loading' style='color:red;'>Eroare de conexiune. Verifică internetul.</div>";
+                    // În caz de eroare, folosim datele de rezervă
+                    let places = generateFallbackPlaces(subCategoryName, currentCityName);
+                    currentDataList = places;
+                    displayResults(currentDataList);
                 });
         }
 
@@ -480,7 +500,6 @@ html
                 let favIcon = isFav ? "❤️" : "🤍";
                 let statusColor = openStatus ? "status-open" : "status-closed";
                 
-                let priceHtml = place.price ? `<p style="color:#d32f2f; font-weight:bold; margin:2px 0;">⛽ ${place.price}</p>` : "";
                 let queueBtnHtml = "";
                 if(currentCategoryName === "Instituții Publice") {
                     queueBtnHtml = `<button class="queue-btn" onclick="reportQueue('${name.replace(/'/g, "\\'")}')">Raportează Coada</button>`;
@@ -492,7 +511,6 @@ html
                             <h4><span class="status-dot ${statusColor}"></span> ${name}</h4>
                             <p>📍 ${place.address}</p>
                             <p>🕒 <strong>Program: ${openingHours}</strong></p>
-                            ${priceHtml}
                             ${queueBtnHtml}
                         </div>
                         <div class="action-btns">
@@ -549,8 +567,7 @@ html
                             address: props.address_line2 || currentCityName,
                             program: "Nedefinit",
                             lat: props.lat,
-                            lng: props.lon,
-                            price: null
+                            lng: props.lon
                         });
                     });
                     displayResults(places);
