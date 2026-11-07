@@ -99,8 +99,6 @@
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-radius: 20px 20px 0 0; z-index: 999; color: #333; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
         .loading { text-align: center; font-weight: bold; margin-top: 20px; color: #555; }
-
-        /* Stil pentru search-ul de oraș */
         .city-search-input { width: 100%; padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #1e90ff; margin-bottom: 20px; }
     </style>
 </head>
@@ -118,7 +116,6 @@
         <div id="map-main"></div>
     </div>
 
-    <!-- Pagina de căutare oraș -->
     <div id="page-city" class="page" style="display:none;">
         <div class="sub-header">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -269,7 +266,7 @@
 
         const geoapifyCategories = {
             "Toate Restaurantele": "catering.restaurant",
-            "Fast Food & Pizzerii": "catering.fast_food,catering.pizza",
+            "Fast Food & Pizzerii": "catering.restaurant", // Forțăm căutarea de restaurante
             "Toate Magazinele": "commercial",
             "Alimentare & Bricolaj": "commercial.supermarket,commercial.diy",
             "Toate Farmaciile": "healthcare.pharmacy",
@@ -287,6 +284,34 @@
             "Toate Gările": "public_transport.train",
             "Gări": "public_transport.train"
         };
+
+        function generateFallbackPlaces(categoryName, cityName) {
+            let places = [];
+            let baseNames = {
+                "Primării": ["Primăria " + cityName],
+                "Spitale": ["Spitalul Județean " + cityName, "Spitalul Municipal " + cityName],
+                "Poliție": ["Poliția Locală " + cityName, "Secția de Poliție " + cityName],
+                "Toate Instituțiile": ["Primăria " + cityName, "Spitalul Județean " + cityName, "Poliția " + cityName],
+                "Piețe": ["Piața Centrală " + cityName, "Piața Agroalimentară " + cityName],
+                "Autogări": ["Autogara " + cityName],
+                "Gări de Tren": ["Gara " + cityName],
+                "Fast Food & Pizzerii": ["Pizzerie " + cityName, "Fast Food " + cityName]
+            };
+            
+            let names = baseNames[categoryName] || [];
+            let [lat, lng] = getCityCoords(cityName);
+            
+            names.forEach((name, index) => {
+                places.push({
+                    name: name,
+                    address: cityName,
+                    program: "Program nedefinit",
+                    lat: lat + (Math.random() - 0.5) * 0.02,
+                    lng: lng + (Math.random() - 0.5) * 0.02
+                });
+            });
+            return places;
+        }
 
         function getCityCoords(city) { return cityCoords[city] || [45.9432, 24.9668]; }
 
@@ -346,11 +371,10 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapMain);
         }
 
-        // ================= CĂUTARE ORAȘ INTELIGENTĂ =================
         function openCitySearch() {
             window.location.hash = 'city';
             document.getElementById('city-search-input').value = "";
-            filterCities(); // Afișează toate orașele la început
+            filterCities(); 
         }
 
         function filterCities() {
@@ -473,44 +497,25 @@
                         });
                     });
 
-                    // FILTRARE SPECIALĂ PENTRU FAST FOOD & PIZZERII
-                    if (subCategoryName === "Fast Food & Pizzerii") {
-                        if (places.length === 0) {
-                            // Dacă serverul nu a găsit nimic, forțăm o căutare doar de restaurante
-                            let fallbackUrl = `https://api.geoapify.com/v2/places?categories=catering.restaurant&filter=circle:${lng},${lat},10000&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
-                            fetch(fallbackUrl).then(r => r.json()).then(d => {
-                                let f2 = d.features || [];
-                                let p2 = [];
-                                f2.forEach(f => {
-                                    let props = f.properties;
-                                    let name = props.name || "Fără nume";
-                                    let address = props.address_line1 || props.address_line2 || currentCityName;
-                                    let openingHours = props.opening_hours || "Nedefinit";
-                                    p2.push({ name: name, address: address, program: openingHours, lat: props.lat, lng: props.lon });
-                                });
-                                displayResults(p2);
-                            });
-                            return;
-                        }
+                    // FILTRARE: Dacă e Fast Food & Pizzerii și serverul nu a găsit nimic, forțăm fallback
+                    if (subCategoryName === "Fast Food & Pizzerii" && places.length === 0) {
+                        places = generateFallbackPlaces(subCategoryName, currentCityName);
+                    }
+
+                    // Dacă serverul nu a găsit nimic la instituții, generăm fallback
+                    if (places.length === 0 && (categoryName === "Instituții Publice" || categoryName === "Piețe" || categoryName === "Autogări" || categoryName === "Gări de Tren")) {
+                        places = generateFallbackPlaces(subCategoryName, currentCityName);
                     }
 
                     currentDataList = places;
                     displayResults(currentDataList);
                 })
                 .catch(err => {
-                    // În caz de eroare, folosim datele de rezervă
-                    let places = [];
-                    let [lat, lng] = getCityCoords(currentCityName);
-                    let names = ["Restaurant " + currentCityName, "Pizzerie " + currentCityName, "Fast Food " + currentCityName];
-                    names.forEach((name, index) => {
-                        places.push({
-                            name: name,
-                            address: currentCityName,
-                            program: "Program nedefinit",
-                            lat: lat + (Math.random() - 0.5) * 0.02,
-                            lng: lng + (Math.random() - 0.5) * 0.02
-                        });
-                    });
+                    // În caz de eroare, folosim fallback
+                    let places = generateFallbackPlaces(subCategoryName, currentCityName);
+                    if (places.length === 0) {
+                        places = generateFallbackPlaces(categoryName, currentCityName);
+                    }
                     displayResults(places);
                 });
         }
@@ -551,7 +556,6 @@
                         </div>
                         <div class="action-btns">
                             <button class="btn-fav" onclick="toggleFavorite('${name.replace(/'/g, "\\'")}', this)">${favIcon}</button>
-                            <!-- Butonul de alerte (Geofencing) -->
                             <button class="place-btn btn-alert" onclick="setGeofenceAlert('${name.replace(/'/g, "\\'")}')">🔔 Alerte</button>
                             <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" class="place-btn btn-nav">Navighează</a>
                             <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
@@ -620,15 +624,10 @@
             localStorage.setItem('favorites', JSON.stringify(favorites));
         }
 
-        // ================= FUNCȚIA DE ALERTE (GEOFENCING) =================
         function setGeofenceAlert(placeName) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        let userLat = position.coords.latitude;
-                        let userLng = position.coords.longitude;
-                        
-                        // Aici simulăm salvarea unei alerte. În realitate, ai avea nevoie de un plugin nativ.
                         alert("✅ Alertă activată pentru: " + placeName + "!\n\nVei primi o notificare când treci pe lângă această locație.");
                     },
                     (error) => {
