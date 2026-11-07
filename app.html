@@ -253,9 +253,10 @@
             "Hunedoara": [45.7500, 22.9000], "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
         };
 
+        // Subcategorii separate pentru Magazine
         const subcategories = {
             "Restaurante": ["Toate Restaurantele", "Fast Food & Pizzerii"],
-            "Magazine": ["Toate Magazinele", "Alimentare & Bricolaj"],
+            "Magazine": ["Toate Magazinele", "Alimentare", "Bricolaj & Construcții"],
             "Farmacii": ["Toate Farmaciile", "Farmacii de Gardă"],
             "Benzinării": ["Toate Benzinăriile", "Non-Stop (24/7)"],
             "Instituții Publice": ["Toate Instituțiile", "Primării", "Spitale", "Poliție"],
@@ -266,9 +267,10 @@
 
         const geoapifyCategories = {
             "Toate Restaurantele": "catering.restaurant",
-            "Fast Food & Pizzerii": "catering.restaurant", // Forțăm căutarea de restaurante
+            "Fast Food & Pizzerii": "catering.restaurant", 
             "Toate Magazinele": "commercial",
-            "Alimentare & Bricolaj": "commercial.supermarket,commercial.diy",
+            "Alimentare": "commercial.supermarket",
+            "Bricolaj & Construcții": "commercial.diy",
             "Toate Farmaciile": "healthcare.pharmacy",
             "Farmacii de Gardă": "healthcare.pharmacy",
             "Toate Benzinăriile": "service.vehicle.fuel",
@@ -295,7 +297,9 @@
                 "Piețe": ["Piața Centrală " + cityName, "Piața Agroalimentară " + cityName],
                 "Autogări": ["Autogara " + cityName],
                 "Gări de Tren": ["Gara " + cityName],
-                "Fast Food & Pizzerii": ["Pizzerie " + cityName, "Fast Food " + cityName]
+                "Fast Food & Pizzerii": ["Pizzerie " + cityName, "Fast Food " + cityName],
+                "Alimentare": ["Kaufland " + cityName, "Lidl " + cityName, "Profi " + cityName],
+                "Bricolaj & Construcții": ["Dedeman " + cityName, "Leroy Merlin " + cityName]
             };
             
             let names = baseNames[categoryName] || [];
@@ -443,6 +447,7 @@
                 if(sub.includes("Poliție")) icon = "🚓";
                 if(sub.includes("Gardă")) icon = "🚑";
                 if(sub.includes("Alimentare")) icon = "🛒";
+                if(sub.includes("Bricolaj")) icon = "🔨";
                 
                 btn.innerHTML = `<span>${icon}</span> ${sub}`;
                 btn.onclick = function() { openPlacesList(categoryName, sub); };
@@ -497,13 +502,8 @@
                         });
                     });
 
-                    // FILTRARE: Dacă e Fast Food & Pizzerii și serverul nu a găsit nimic, forțăm fallback
-                    if (subCategoryName === "Fast Food & Pizzerii" && places.length === 0) {
-                        places = generateFallbackPlaces(subCategoryName, currentCityName);
-                    }
-
-                    // Dacă serverul nu a găsit nimic la instituții, generăm fallback
-                    if (places.length === 0 && (categoryName === "Instituții Publice" || categoryName === "Piețe" || categoryName === "Autogări" || categoryName === "Gări de Tren")) {
+                    // Dacă nu s-a găsit nimic, folosim fallback
+                    if (places.length === 0) {
                         places = generateFallbackPlaces(subCategoryName, currentCityName);
                     }
 
@@ -511,11 +511,7 @@
                     displayResults(currentDataList);
                 })
                 .catch(err => {
-                    // În caz de eroare, folosim fallback
                     let places = generateFallbackPlaces(subCategoryName, currentCityName);
-                    if (places.length === 0) {
-                        places = generateFallbackPlaces(categoryName, currentCityName);
-                    }
                     displayResults(places);
                 });
         }
