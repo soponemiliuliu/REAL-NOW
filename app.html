@@ -65,6 +65,7 @@
         .btn-nav { background: #ff8c00; }
         .btn-fav { background: none; border: none; font-size: 20px; cursor: pointer; padding: 0; }
         .btn-alert { background: #ff00ff; color: white; }
+        .btn-edit { background: #32cd32; color: white; }
 
         .queue-btn { background: #dc143c; color: white; border: none; padding: 5px 10px; border-radius: 10px; font-size: 11px; margin-top: 5px; cursor: pointer; }
 
@@ -100,6 +101,13 @@
         .bottom-nav div { font-size: 11px; text-align: center; font-weight: bold; cursor: pointer; }
         .loading { text-align: center; font-weight: bold; margin-top: 20px; color: #555; }
         .city-search-input { width: 100%; padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #1e90ff; margin-bottom: 20px; }
+
+        /* Stiluri pentru fereastra de editare business */
+        .business-panel { display: none; margin: 15px; padding: 15px; background: #fff; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid #32cd32; }
+        .business-panel h3 { margin-top: 0; color: #32cd32; }
+        .business-panel input, .business-panel textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; }
+        .business-panel button { background: #1e90ff; color: white; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        .business-info-display { background: #e8f5e9; padding: 10px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #32cd32; }
     </style>
 </head>
 <body>
@@ -161,6 +169,9 @@
             <h2 id="chat-title">Chat</h2>
         </div>
         
+        <!-- AICI APARE PROFILUL DE BUSINESS (DACĂ EXISTĂ) -->
+        <div id="business-display" style="margin: 15px; display: none;"></div>
+
         <div class="chat-box" id="chat-box"></div>
         
         <div class="emoji-picker" id="emoji-picker">
@@ -192,6 +203,22 @@
             <button class="review-btn" onclick="submitReview()">Trimite Recenzia</button>
             
             <div class="existing-reviews" id="existing-reviews"></div>
+        </div>
+    </div>
+
+    <!-- PAGINA DE EDITARE BUSINESS (ASCUNSĂ) -->
+    <div id="page-business-edit" class="page" style="display:none;">
+        <div class="sub-header" style="background: #32cd32;">
+            <button onclick="window.location.hash = 'list'">⬅</button>
+            <h2>Editare Profil Business</h2>
+        </div>
+        <div class="business-panel" style="display: block;">
+            <h3>Adaugă detalii pentru: <span id="edit-place-name"></span></h3>
+            <input type="text" id="edit-desc" placeholder="Descriere scurtă (ex: Cel mai bun restaurant din oraș)">
+            <textarea id="edit-menu" rows="3" placeholder="Meniu / Prețuri (ex: Pizza Margherita - 25 lei, Paste - 30 lei)"></textarea>
+            <input type="text" id="edit-offer" placeholder="Ofertă specială (ex: 10% reducere la prima comandă)">
+            <input type="text" id="edit-photo" placeholder="Link poză (ex: https://...)">
+            <button onclick="saveBusinessInfo()">Salvează Detaliile</button>
         </div>
     </div>
 
@@ -235,6 +262,7 @@
         let currentSubCategoryName = "";
         let currentDataList = []; 
         let showOnlyOpen = false;
+        let editingPlaceName = "";
 
         const cityCoords = {
             "Cluj-Napoca": [46.7712, 23.6236], "București": [44.4268, 26.1025], "Timișoara": [45.7489, 21.2087],
@@ -253,7 +281,6 @@
             "Hunedoara": [45.7500, 22.9000], "Mediaș": [46.1667, 24.3500], "Sighișoara": [46.2169, 24.7911]
         };
 
-        // Subcategorii separate pentru Magazine
         const subcategories = {
             "Restaurante": ["Toate Restaurantele", "Fast Food & Pizzerii"],
             "Magazine": ["Toate Magazinele", "Alimentare", "Bricolaj & Construcții"],
@@ -262,7 +289,9 @@
             "Instituții Publice": ["Toate Instituțiile", "Primării", "Spitale", "Poliție"],
             "Piețe": ["Toate Piețele", "Piețe Agroalimentare"],
             "Autogări": ["Toate Autogările", "Autogări"],
-            "Gări de Tren": ["Toate Gările", "Gări"]
+            "Gări de Tren": ["Toate Gările", "Gări"],
+            "Aeroporturi": ["Toate Aeroporturile", "Aeroporturi"],
+            "Auto": ["Toate Serviciile Auto", "Service Auto", "Spălătorii Auto"]
         };
 
         const geoapifyCategories = {
@@ -284,7 +313,12 @@
             "Toate Autogările": "public_transport.bus",
             "Autogări": "public_transport.bus",
             "Toate Gările": "public_transport.train",
-            "Gări": "public_transport.train"
+            "Gări": "public_transport.train",
+            "Toate Aeroporturile": "airport",
+            "Aeroporturi": "airport",
+            "Toate Serviciile Auto": "service.vehicle",
+            "Service Auto": "service.vehicle.repair",
+            "Spălătorii Auto": "service.vehicle.car_wash"
         };
 
         function generateFallbackPlaces(categoryName, cityName) {
@@ -299,7 +333,10 @@
                 "Gări de Tren": ["Gara " + cityName],
                 "Fast Food & Pizzerii": ["Pizzerie " + cityName, "Fast Food " + cityName],
                 "Alimentare": ["Kaufland " + cityName, "Lidl " + cityName, "Profi " + cityName],
-                "Bricolaj & Construcții": ["Dedeman " + cityName, "Leroy Merlin " + cityName]
+                "Bricolaj & Construcții": ["Dedeman " + cityName, "Leroy Merlin " + cityName],
+                "Aeroporturi": ["Aeroportul " + cityName],
+                "Service Auto": ["Service Auto " + cityName],
+                "Spălătorii Auto": ["Spălătorie Auto " + cityName]
             };
             
             let names = baseNames[categoryName] || [];
@@ -357,7 +394,9 @@
                 { name: "Instituții Publice", icon: "https://images.unsplash.com/photo-1577412647305-991150c7d163?auto=format&fit=crop&w=300&q=80", color: "bg-blue" },
                 { name: "Piețe", icon: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=300&q=80", color: "bg-orange" },
                 { name: "Autogări", icon: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=300&q=80", color: "bg-brown" },
-                { name: "Gări de Tren", icon: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=300&q=80", color: "bg-brown" }
+                { name: "Gări de Tren", icon: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=300&q=80", color: "bg-brown" },
+                { name: "Aeroporturi", icon: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=300&q=80", color: "bg-blue" },
+                { name: "Auto", icon: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=300&q=80", color: "bg-teal" }
             ];
             categories.forEach(cat => {
                 let btn = document.createElement('button');
@@ -420,6 +459,8 @@
                 document.getElementById('page-fav').style.display = 'block';
             } else if (hash === '#city') {
                 document.getElementById('page-city').style.display = 'block';
+            } else if (hash === '#edit-business') {
+                document.getElementById('page-business-edit').style.display = 'block';
             } else {
                 document.getElementById('page-home').style.display = 'block';
                 if (mapMain) setTimeout(() => mapMain.invalidateSize(), 200);
@@ -448,6 +489,9 @@
                 if(sub.includes("Gardă")) icon = "🚑";
                 if(sub.includes("Alimentare")) icon = "🛒";
                 if(sub.includes("Bricolaj")) icon = "🔨";
+                if(sub.includes("Aeroport")) icon = "✈️";
+                if(sub.includes("Service")) icon = "🔧";
+                if(sub.includes("Spălătorii")) icon = "🚿";
                 
                 btn.innerHTML = `<span>${icon}</span> ${sub}`;
                 btn.onclick = function() { openPlacesList(categoryName, sub); };
@@ -502,7 +546,6 @@
                         });
                     });
 
-                    // Dacă nu s-a găsit nimic, folosim fallback
                     if (places.length === 0) {
                         places = generateFallbackPlaces(subCategoryName, currentCityName);
                     }
@@ -552,7 +595,7 @@
                         </div>
                         <div class="action-btns">
                             <button class="btn-fav" onclick="toggleFavorite('${name.replace(/'/g, "\\'")}', this)">${favIcon}</button>
-                            <button class="place-btn btn-alert" onclick="setGeofenceAlert('${name.replace(/'/g, "\\'")}')">🔔 Alerte</button>
+                            <button class="place-btn btn-edit" onclick="openBusinessEdit('${name.replace(/'/g, "\\'")}')">✏️ Editează</button>
                             <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" class="place-btn btn-nav">Navighează</a>
                             <button class="place-btn" onclick="openChat('${name.replace(/'/g, "\\'")}')">Chat</button>
                         </div>
@@ -612,6 +655,51 @@
                 });
         }
 
+        // ================= LOGICA DE BUSINESS (RECLAMĂ & MENIU) =================
+        function openBusinessEdit(placeName) {
+            editingPlaceName = placeName;
+            document.getElementById('edit-place-name').innerText = placeName;
+            
+            // Încărcăm datele existente dacă există
+            let bizData = JSON.parse(localStorage.getItem('biz_' + placeName)) || {};
+            document.getElementById('edit-desc').value = bizData.desc || "";
+            document.getElementById('edit-menu').value = bizData.menu || "";
+            document.getElementById('edit-offer').value = bizData.offer || "";
+            document.getElementById('edit-photo').value = bizData.photo || "";
+
+            window.location.hash = 'edit-business';
+        }
+
+        function saveBusinessInfo() {
+            let bizData = {
+                desc: document.getElementById('edit-desc').value,
+                menu: document.getElementById('edit-menu').value,
+                offer: document.getElementById('edit-offer').value,
+                photo: document.getElementById('edit-photo').value
+            };
+            localStorage.setItem('biz_' + editingPlaceName, JSON.stringify(bizData));
+            alert("✅ Detaliile au fost salvate! Acum vor apărea în chat-ul acestui loc.");
+            window.location.hash = 'list';
+        }
+
+        function loadBusinessInfo(placeName) {
+            let bizData = JSON.parse(localStorage.getItem('biz_' + placeName));
+            let displayDiv = document.getElementById('business-display');
+            
+            if (bizData && (bizData.desc || bizData.menu || bizData.offer || bizData.photo)) {
+                let html = `<div class="business-info-display">`;
+                if (bizData.desc) html += `<p><strong>📝 Descriere:</strong> ${bizData.desc}</p>`;
+                if (bizData.menu) html += `<p><strong>🍽️ Meniu/Prețuri:</strong><br>${bizData.menu.replace(/\n/g, '<br>')}</p>`;
+                if (bizData.offer) html += `<p><strong>🎁 Ofertă:</strong> ${bizData.offer}</p>`;
+                if (bizData.photo) html += `<img src="${bizData.photo}" style="max-width:100%; border-radius:10px; margin-top:5px;">`;
+                html += `</div>`;
+                displayDiv.innerHTML = html;
+                displayDiv.style.display = "block";
+            } else {
+                displayDiv.style.display = "none";
+            }
+        }
+
         function toggleFavorite(placeName, btnElement) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             let index = favorites.indexOf(placeName);
@@ -642,6 +730,7 @@
             currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
             document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
+            loadBusinessInfo(placeName); // Încărcăm reclama/meniul
         }
 
         function loadFavorites() {
