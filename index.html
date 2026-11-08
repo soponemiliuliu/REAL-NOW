@@ -27,7 +27,6 @@
         .location-bar { background: white; color: #333; margin: 10px auto; padding: 10px; border-radius: 25px; width: 90%; display: flex; justify-content: space-between; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         
-        /* Butoane rotunjite si aspect placut */
         .category-btn { background-color: white; border-radius: 20px; overflow: hidden; color: #333; display: flex; flex-direction: column; cursor: pointer; border: none; padding: 0; text-align: left; width: 100%; box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: transform 0.2s;}
         .category-btn:active { transform: scale(0.95); }
         .category-btn img { width: 100%; height: 70px; object-fit: cover; }
@@ -108,7 +107,6 @@
         .loading { text-align: center; font-weight: bold; margin-top: 20px; color: #555; }
         .city-search-input { width: 100%; padding: 15px; font-size: 18px; border-radius: 15px; border: 2px solid #1e90ff; margin-bottom: 20px; }
 
-        /* Stiluri pentru fereastra de editare business */
         .business-panel { display: none; margin: 15px; padding: 20px; background: #fff; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 2px solid #32cd32; }
         .business-panel h3 { margin-top: 0; color: #32cd32; }
         .business-panel input, .business-panel textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ccc; font-family: inherit; }
@@ -121,7 +119,6 @@
 
     <div class="omulet" id="omulet"></div>
 
-    <!-- PAGINA 1: Acasa -->
     <div id="page-home" class="page active">
         <div class="header"><h1>Real Now</h1></div>
         <div class="location-bar" onclick="openCitySearch()">
@@ -132,7 +129,6 @@
         <div id="map-main"></div>
     </div>
 
-    <!-- PAGINA 2: Caută Oraș -->
     <div id="page-city" class="page" style="display:none;">
         <div class="sub-header">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -144,7 +140,6 @@
         </div>
     </div>
 
-    <!-- PAGINA 3: Subcategorii -->
     <div id="page-subcat" class="page" style="display:none;">
         <div class="sub-header" id="subcat-header">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -153,7 +148,6 @@
         <div class="list-container" id="subcat-items"></div>
     </div>
 
-    <!-- PAGINA 4: Lista Locatii -->
     <div id="page-list" class="page" style="display:none;">
         <div class="sub-header" id="list-header">
             <button onclick="goBackToSubcat()">⬅</button>
@@ -174,7 +168,6 @@
         </div>
     </div>
 
-    <!-- PAGINA 5: Chat & Recenzii -->
     <div id="page-chat" class="page" style="display:none;">
         <div class="sub-header" style="background: #1e90ff;">
             <button onclick="window.location.hash = 'list'">⬅</button>
@@ -217,7 +210,6 @@
         </div>
     </div>
 
-    <!-- PAGINA 6: Editare Business -->
     <div id="page-business-edit" class="page" style="display:none;">
         <div class="sub-header" style="background: #32cd32;">
             <button onclick="window.location.hash = 'list'">⬅</button>
@@ -239,7 +231,6 @@
         </div>
     </div>
 
-    <!-- PAGINA 7: Profil Utilizator (Puncte & Insigne) -->
     <div id="page-profile" class="page" style="display:none;">
         <div class="sub-header" style="background: #8a2be2;">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -254,7 +245,6 @@
         </div>
     </div>
 
-    <!-- PAGINA 8: Preferate -->
     <div id="page-fav" class="page" style="display:none;">
         <div class="sub-header" style="background: #8a2be2;">
             <button onclick="window.location.hash = ''">⬅</button>
@@ -271,6 +261,58 @@
         <div onclick="loadProfile()">👤<br>Profil</div>
         <div onclick="alert('Aici va apărea lista cu limbi străine!')">🌐<br>Limbă</div>
     </div>
+
+    <!-- FIREBASE SCRIPTS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9VlEByyo9WKZs1UiZ3-63ucBKNzhw3p0",
+            authDomain: "real-now-7e3ab.firebaseapp.com",
+            projectId: "real-now-7e3ab",
+            storageBucket: "real-now-7e3ab.firebasestorage.app",
+            messagingSenderId: "15878881122",
+            appId: "1:15878881122:web:37664e6390519ee13db63b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let currentChatRef = null;
+        let unsubscribeChat = null;
+
+        // Expunem funcțiile Firebase către scriptul principal
+        window.firebaseInitChat = function(placeName) {
+            const chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML = ""; // Curățăm chat-ul anterior
+
+            if (unsubscribeChat) unsubscribeChat();
+
+            // Creăm o referință către chat-ul acelui loc
+            const safePlaceName = placeName.replace(/[.#$\[\]]/g, '_');
+            currentChatRef = ref(db, 'chats/' + safePlaceName);
+
+            // Ascultăm mesajele noi
+            unsubscribeChat = onChildAdded(currentChatRef, (snapshot) => {
+                const data = snapshot.val();
+                let msgHtml = `<div class="chat-msg ${data.isMe ? 'me' : ''}">`;
+                if (data.text) msgHtml += data.text;
+                if (data.image) msgHtml += `<br><img src="${data.image}">`;
+                msgHtml += `</div>`;
+                chatBox.innerHTML += msgHtml;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        };
+
+        window.firebaseSendMessage = function(text, imageBase64) {
+            if (!currentChatRef) return;
+            push(currentChatRef, {
+                text: text,
+                image: imageBase64 || null,
+                timestamp: Date.now()
+            });
+        };
+    </script>
 
     <script>
         const GEOAPIFY_API_KEY = "047140cea56d45a48ddff8530dbb3359";
@@ -636,7 +678,6 @@
                 if (showOnlyOpen && !openStatus) return;
                 hasResults = true;
 
-                // Verificăm dacă locația are oferte (reducere)
                 let bizData = JSON.parse(localStorage.getItem('biz_' + name)) || {};
                 let hasOffer = bizData.offer ? true : false;
                 let offerBadge = hasOffer ? `<span class="badge-offer">🎁 Ofertă</span>` : "";
@@ -721,7 +762,6 @@
                 });
         }
 
-        // ================= LOGICA DE BUSINESS (RECLAMĂ & MENIU) =================
         function openBusinessEdit(placeName) {
             editingPlaceName = placeName;
             document.getElementById('edit-place-name').innerText = placeName;
@@ -762,7 +802,7 @@
                 photo: uploadedPhotoBase64
             };
             localStorage.setItem('biz_' + editingPlaceName, JSON.stringify(bizData));
-            addPoints(10); // Oferim 10 puncte pentru completarea profilului
+            addPoints(10);
             alert("✅ Detaliile au fost salvate! Ai primit 10 puncte.");
             window.location.hash = 'list';
         }
@@ -785,7 +825,6 @@
             }
         }
 
-        // ================= LOGICA DE PUNCTE & INSIGNE =================
         let userPoints = 0;
         function loadPoints() {
             userPoints = parseInt(localStorage.getItem('userPoints')) || 0;
@@ -812,7 +851,6 @@
             window.location.hash = 'profile';
         }
 
-        // ================= ALTE FUNCȚII =================
         function toggleFavorite(placeName, btnElement) {
             let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
             let index = favorites.indexOf(placeName);
@@ -831,12 +869,14 @@
             alert("Ai raportat coada la " + placeName + ". Mulțumim! Ai primit 5 puncte.");
         }
 
+        // === LOGICA CHAT ===
         function openChat(placeName) {
             window.location.hash = 'chat';
             currentPlaceName = placeName;
             document.getElementById('chat-title').innerText = "Chat: " + placeName;
-            document.getElementById('chat-box').innerHTML = `<div class="chat-msg">Bun venit în chat-ul pentru <b>${placeName}</b>!</div>`;
             loadBusinessInfo(placeName);
+            // Inițializăm chat-ul Firebase
+            window.firebaseInitChat(placeName);
         }
 
         function loadFavorites() {
@@ -852,12 +892,24 @@
 
         function toggleEmoji() { let picker = document.getElementById('emoji-picker'); picker.style.display = (picker.style.display === 'block') ? 'none' : 'block'; }
         function addEmoji(emoji) { let input = document.getElementById('msg-input'); input.value += emoji; input.focus(); toggleEmoji(); }
+        
+        function uploadImage(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    // Trimitem imaginea ca mesaj pe Firebase
+                    window.firebaseSendMessage(null, e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
         function sendMsg() {
             const input = document.getElementById('msg-input');
-            const box = document.getElementById('chat-box');
             if (input.value.trim() !== "") {
-                box.innerHTML += `<div class="chat-msg me">${input.value}</div>`;
-                input.value = ""; box.scrollTop = box.scrollHeight;
+                window.firebaseSendMessage(input.value, null);
+                input.value = ""; 
             }
         }
 
